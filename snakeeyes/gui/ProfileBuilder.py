@@ -80,6 +80,8 @@ class ProfileBuilder(wx.Frame):
 
         self.refresh = wx.Button(self, wx.NewId(), "refresh")
         self.refresh.Bind(wx.EVT_BUTTON, self.on_refresh_button)
+
+        self.hwnd = wx.TextCtrl(self, -1, str(win.hwnd))
                 
         self.layout()
         self.updateImage()
@@ -88,6 +90,26 @@ class ProfileBuilder(wx.Frame):
         self.timer = wx.Timer()
         self.timer.Bind(wx.EVT_TIMER, self.on_tick)
         self.timer.Start(500, wx.TIMER_CONTINUOUS)
+
+
+    def layout(self):
+        "Arranges the controls inside the window."
+        box = wx.BoxSizer(wx.VERTICAL)
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(self.profileName)
+        row.Add(self.refresh)
+        row.AddSpacer(20)
+        row.Add(wx.StaticText(self, -1, "hwnd:"))
+        row.Add(self.hwnd)
+        box.Add(row)
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(self.bmp, 0, wx.EXPAND)
+        box.Add(row, 0, wx.EXPAND)
+        self.shell.SetSizeHints(500,-1)
+        box.Add(self.shell, 1, wx.EXPAND)
+        self.SetSizerAndFit(box)
+
+
         
     def draw_boxes(self):
         """
@@ -109,19 +131,6 @@ class ProfileBuilder(wx.Frame):
         self.shell.clear()
         self.shell.AppendText(pformat(self.profile))
 
-    def layout(self):        
-        box = wx.BoxSizer(wx.VERTICAL)
-        row = wx.BoxSizer(wx.HORIZONTAL)
-        row.Add(self.profileName)
-        row.Add(self.refresh)
-        box.Add(row)
-        row = wx.BoxSizer(wx.HORIZONTAL)
-        row.Add(self.bmp, 0, wx.EXPAND)
-        box.Add(row, 0, wx.EXPAND)
-        self.shell.SetSizeHints(500,-1)
-        box.Add(self.shell, 1, wx.EXPAND)
-        self.SetSizerAndFit(box)
-
     def updateImage(self):
         self.img = self.win.as_image()
         self.draw_boxes()
@@ -132,5 +141,3 @@ class ProfileBuilder(wx.Frame):
 
     def on_tick(self, e):
         self.on_refresh_button(e)
-        
-        
