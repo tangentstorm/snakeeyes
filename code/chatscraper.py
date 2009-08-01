@@ -1,0 +1,84 @@
+
+"""
+Chat Scraper (Pokerstars only, for now)
+"""
+import ImageGrab
+import ImageOps
+import scrape
+import difflib
+import wx
+import thread
+
+# default location of chat window:
+w,h = 362,80
+x,y = 14,482
+
+
+
+# http://wiki.wxpython.org/index.cgi/WorkingWithImages
+def pilToBitmap(pil):
+    return imageToBitmap(pilToImage(pil))
+def pilToImage(pil):
+    image = wx.EmptyImage(pil.size[0], pil.size[1])
+    image.SetData(pil.convert('RGB').tostring())
+    return image
+def imageToBitmap(image):
+    return image.ConvertToBitmap()
+
+
+class ScrapeFrame(wx.Frame):
+    def init(self):
+        self.bmp = wx.StaticBitmap(self, size=(w,h))
+        self.layout()
+        self.Show()
+
+    def layout(self):
+        box = wx.BoxSizer()
+        box.Add(self.bmp)
+        self.SetSizerAndFit(box)
+
+    def updateImage(self, im):
+        self.bmp.SetBitmap(pilToBitmap(im))
+        
+ 
+def getText(image):
+    chatfont = scrape.FontData("w:/app/poker/ps-chat.fontd")
+    for top,base,bottom in scrape.lines(image):
+        
+        def hasInk(a,b):
+            return image.getpixel((a,b+top+1)) == 0
+        
+        yield scrape.getstring(w, bottom-top, chatfont, hasInk, 
+                               )#train=True)
+
+def scrape_loop(callback=None):
+
+    prevData = None
+    prevText = []
+
+    while True:
+        im = ImageGrab.grab((x, y, x+w, y+h))
+        
+        data = list(im.getdata())
+        if data != prevData:
+            prevData = data
+
+            if callback:
+                callback(im)
+            continue
+
+            bw = ImageOps.autocontrast(im, 0).convert('1')
+            text = list(getText(bw))
+            for diff in difflib.ndiff(prevText, text):
+                if diff.startswith("+"):
+                    print diff
+            prevText = text
+
+
+ 
+if __name__=="__main__":
+    app = wx.App(redirect=False)
+    win = ScrapeFrame(None, pos=(x,y+h+10))
+    win.init()
+    thread.start_new_thread(scrape_loop, (win.updateImage,))
+    app.MainLoop()
