@@ -15,31 +15,9 @@ x,y = 14,482
 
 
 
-# http://wiki.wxpython.org/index.cgi/WorkingWithImages
-def pilToBitmap(pil):
-    return imageToBitmap(pilToImage(pil))
-def pilToImage(pil):
-    image = wx.EmptyImage(pil.size[0], pil.size[1])
-    image.SetData(pil.convert('RGB').tostring())
-    return image
-def imageToBitmap(image):
-    return image.ConvertToBitmap()
 
 
-class ScrapeFrame(wx.Frame):
-    def init(self):
-        self.bmp = wx.StaticBitmap(self, size=(w,h))
-        self.layout()
-        self.Show()
 
-    def layout(self):
-        box = wx.BoxSizer()
-        box.Add(self.bmp)
-        self.SetSizerAndFit(box)
-
-    def updateImage(self, im):
-        self.bmp.SetBitmap(pilToBitmap(im))
-        
  
 def getText(image):
     chatfont = scrape.FontData("w:/app/poker/ps-chat.fontd")

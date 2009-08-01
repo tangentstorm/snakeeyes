@@ -3,16 +3,12 @@
 import os
 import win32gui, win32ui
 import Image, ImageGrab, ImageDraw
-
+import windows
 
 ## window finding ##########################################
 
 def listwindows():
-    res = []
-    def record(hwnd, extra):
-        res.append(hwnd)
-    win32gui.EnumWindows(record, None)
-    return res
+    return windows.all_hwnds()
 
 
 ## screen capture ##########################################
