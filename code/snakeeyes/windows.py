@@ -37,12 +37,31 @@ class Window(object):
         (sl, st) = ClientToScreen(self.hwnd, (cl, ct))
         (sr, sb) = ClientToScreen(self.hwnd, (cr, cb))
         return (sl, st, sr, sb)
+
+    @property
+    def width(self):
+        x, y, x2, y2 = GetWindowRect(self.hwnd)
+        return x2-x
+        
+    @property
+    def height(self):
+        x, y, x2, y2 = GetWindowRect(self.hwnd)
+        return y2 - y
+
+    @property
+    def position(self):
+        x, y, x2, y2 = GetWindowRect(self.hwnd)
+        return (x, y)
+    
     
     def as_image(self):
         return ImageGrab.grab(self.bounds)
 
     def bringToFront(self):
         win32gui.SetForegroundWindow(self.hwnd)
+        
+    def move_to(self, x, y):
+        win32gui.MoveWindow(self.hwnd, 0, 0, self.width, self.height, True)
 
 
 def all_hwnds(condition=lambda a:True):
@@ -65,6 +84,8 @@ def where(condition):
     return [win for win in all() if cond(win)]
 
 
+def named(txt):
+    return where(lambda win: win.text.count(txt))[0]
 
 class WindowTree(object):
     """
