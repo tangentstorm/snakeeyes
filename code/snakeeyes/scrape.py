@@ -1,13 +1,83 @@
 # scrape a win32 window or image so we can see what's on screen
 
-import os
+import os, sys
 import win32gui, win32ui
 import Image, ImageGrab, ImageDraw
 import windows
+import warnings
+from fontdata import FontData
+
+
+class Region(object):
+    """
+    This is the top level scraping tool.
+    """
+    def __init__(self, rect, tool=None, color=None):
+        self.rect = rect
+        self.tool = tool
+        self.color = color
+        self.last_value = None
+        
+    def take_snapshot(self, screen):
+        """
+        screen:image -> cropped_area:image
+        """
+        self.last_snapshot = screen.crop(self.rect.as_quad())
+        return self.last_snapshot
+    
+    def scrape(self, screen):
+        """
+        screen:image -> contents:(Maybe str)
+        """
+        self.take_snapshot(screen)
+        self.last_value = self.tool.recognize(self.last_snapshot)
+        return self.last_value
+
+
+class Tool(object):
+    """
+    A Tool combines FontData and a GlyphFilter
+    """
+    def __init__(self, font, filter=None):
+        self.font = font
+        self.filter = filter
+        
+    def recognize(self, glyph):
+        return self.font.recall(glyph)
+    
+    
+class NullTool(object):
+    def recognize(self, glyph):
+        return None    
+    
+
+class Rectangle(object):
+    def __init__(self, pos, size):
+        self.pos = pos
+        self.size = size
+    
+    def far_corner(self):
+        left, top, right, bottom = self.as_quad()
+        return (right, bottom)
+    
+    def as_quad(self):
+        left, top = self.pos
+        width, height = self.size
+        return (left, top, left + width, top + height)
+
+
+        
+
+
+
+
+
+
 
 ## window finding ##########################################
 
 def listwindows():
+    warnings.warn("deprecated. use windows.all_hwnds")
     return windows.all_hwnds()
 
 
@@ -215,42 +285,6 @@ if __name__=="__main__":
     unittest.main()
 
 
-
-
-
-
-
-## font data storage #######################################
-
-class FontData(dict):
-    """
-    This is just a dict-like class for storing
-    font data. It stores
-    """
-    def __init__(self, filename=None):
-        self.filename = filename
-        if os.path.exists(self.filename):
-            self.load(self.filename)
-        else:
-            self[-1]='' # init with null char (gap between letters)
-            self[0]=' ' # init with space char
-
-
-    def load(self, filename):
-        self.filename = filename
-        for line in open(self.filename).readlines():
-            if line.strip() == '' or line.startswith("#"): continue
-            bmp, chars = line.split("=",1)
-            dict.__setitem__(self, int(bmp), chars[:-1])
-        
-    def __setitem__(self, bmp, chars):
-        dict.__setitem__(self, bmp, chars)
-
-        learn = open(self.filename, "a")
-        print >> learn, "%s=%s" % (bmp, chars)
-        learn.close()
-
-
 ## training ################################################
 
         
@@ -278,6 +312,14 @@ def matrix_from_bmp(bmp, height):
     lines.insert(-2,'-'*len(lines[1]))
     return "\n".join(["".join(line) for line in lines])
 
+
+def number_to_image(gm, height):
+    matrix = matrix_from_bmp(gm, height)
+    img = Image.new('1', (len(lines[0]), height))
+    for y, line in enumerate(matrix):
+        for x, char in enumerate(line):
+            img.putpixel((x, y), 1 if char=="#" else 0)
+    
 
 def learnNewChar(fontd, bmp, height, sofar):
     print "context: {%s}" % ''.join(sofar)

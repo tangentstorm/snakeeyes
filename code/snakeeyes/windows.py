@@ -6,6 +6,7 @@ Created on Jul 31, 2009
 import win32gui, win32ui
 import ImageGrab
 import re
+from win32gui import GetWindowRect, GetClientRect, ClientToScreen
 
 class Window(object):
     """
@@ -20,17 +21,28 @@ class Window(object):
     
     @property
     def size(self):
+        """
+        Note: this returns the CLIENT size (the drawable area)
+        """
         left, top, right, bottom = self.bounds
         return (right-left, bottom-top)
         
     @property
     def bounds(self):
-        "returns (left, top, right, bottom)"    
-        return win32gui.GetWindowRect(self.hwnd)
+        """"
+        returns (left, top, right, bottom) of client area
+        in screen coordinates
+        """
+        (cl, ct, cr, cb) = GetClientRect(self.hwnd)
+        (sl, st) = ClientToScreen(self.hwnd, (cl, ct))
+        (sr, sb) = ClientToScreen(self.hwnd, (cr, cb))
+        return (sl, st, sr, sb)
     
     def as_image(self):
         return ImageGrab.grab(self.bounds)
 
+    def bringToFront(self):
+        win32gui.SetForegroundWindow(self.hwnd)
 
 
 def all_hwnds(condition=lambda a:True):

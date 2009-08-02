@@ -15,9 +15,9 @@ class WindowSelector(wx.Frame):
 
     def __init__(self, callback):
         super(WindowSelector, self).__init__(None, -1, "select window")
-        self.filterText = wx.TextCtrl(self, -1, "")
+        self.filterText = wx.TextCtrl(self, -1, "5-Card")
         self.Bind(wx.EVT_TEXT, self.OnTextChange, self.filterText)
-        
+
         self.tree = wx.TreeCtrl(self, size=(200,300),
                                 style=wx.TR_HIDE_ROOT)
         self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate)
@@ -62,7 +62,9 @@ if __name__ == "__main__":
         print "making new window for", win.text
         import ProfileBuilder
         reload(ProfileBuilder)
-        pb = ProfileBuilder.ProfileBuilder('w:/app/poker/ps5cd.scrape', win, selector)
+        win.bringToFront()
+        path = 'w:/app/poker/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
+        pb = ProfileBuilder.ProfileBuilder(path, win, selector)
         pb.Show()
     
     app = wx.App(redirect=False)
