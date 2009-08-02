@@ -1,13 +1,12 @@
 """
-Tests the basic use of the system.
+Tests the basic use of the system, for recognizing images.
 """
 import unittest
 import Image, ImageDraw
 from snakeeyes import fontdata, config, scrape
 from snakeeyes.scrape import Region, Rectangle
 
-class Test(unittest.TestCase):
-
+class ImageTest(unittest.TestCase):
 
     def test_simple(self):
         """

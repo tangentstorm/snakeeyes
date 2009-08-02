@@ -35,12 +35,12 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             index = self.InsertStringItem(sys.maxint, name)
             self.SetStringItem(index, 1, region.last_value or '--' )
 
-class ProfileBuilder(wx.Frame):
+class ConfigBuilder(wx.Frame):
     """
     Interactively build a scraping profile.
     """
     def __init__(self, scrapefile, win, parent=None, *a, **kw):
-        super(ProfileBuilder, self).__init__(parent, *a, **kw) 
+        super(ConfigBuilder, self).__init__(parent, *a, **kw) 
         
         
         self.SetTitle("profile builder: %s" % scrapefile)

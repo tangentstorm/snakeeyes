@@ -57,18 +57,18 @@ if __name__ == "__main__":
     
     selector = None
     
-    def make_profile(win):
+    def make_builder(win):
         global selector
         print "making new window for", win.text
-        import ProfileBuilder
-        reload(ProfileBuilder)
+        import builder
+        reload(builder)
         win.bringToFront()
         path = 'w:/app/poker/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
-        pb = ProfileBuilder.ProfileBuilder(path, win, selector)
+        pb = builder.ConfigBuilder(path, win, selector)
         pb.Show()
     
     app = wx.App(redirect=False)
     
-    selector = WindowSelector(make_profile)
+    selector = WindowSelector(make_builder)
     selector.Show()
     app.MainLoop()   
