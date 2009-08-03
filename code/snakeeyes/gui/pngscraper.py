@@ -227,29 +227,30 @@ class PngScraperFrame(wx.Frame):
 #    def chars(self, mode='L', cutoff=200):
 #        return list(scrape.letters(self.im.convert(mode), cutoff))
         
-    def lines(self, mode="L"):
-        return list(scrape.lines(self.im.convert(mode)))
 
-    def drawBaseLines(self, color='#99CCFF', gapcolor='#eeeeee',  mode='L'):
-        y = 0
-        w,h = self.im.size
+    def drawBaseLines(self, baseline_color='#99CCFF', linegap_color='#eeeeee'):
+        img_out = self.im
+
         dc = self.getGC()
-        for y1,base,y2 in self.lines(mode):
+
+        y = 0
+        w, h = img_out.size
+        for (top, base, bottom) in scrape.lines(img_out):
 
             # draw the baseline
-            dc.SetPen(wx.Pen(color))
+            dc.SetPen(wx.Pen(baseline_color))
 
             if not base:
-                base = y2 -2
+                base = bottom -2
                 dc.SetPen(wx.RED_PEN)
 
             dc.DrawLines([(0,base),(w,base)])
 
             # shade out the other stuff
-            dc.SetPen(wx.Pen(gapcolor))
-            dc.SetBrush(wx.Brush(gapcolor))
-            dc.DrawRectangle(0,y,w,y1-y)
-            y = y2
+            dc.SetPen(wx.Pen(linegap_color))
+            dc.SetBrush(wx.Brush(linegap_color))
+            dc.DrawRectangle(0,y,w,top-y)
+            y = bottom
             
         # shade bottom area
         dc.DrawRectangle(0,y,w,h-y)

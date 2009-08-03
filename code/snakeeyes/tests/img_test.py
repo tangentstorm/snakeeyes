@@ -51,7 +51,7 @@ class ImageTest(unittest.TestCase):
         # now that our FontData recognizes the shape,
         # we can set up a scrape region that detects it
         # see ScrapeConfig for how to make this simpler
-        reg = Region(Rectangle((0, 0), glyph.size), Tool(font))
+        reg = Region((0, 0), glyph.size, Tool(font))
         
         # now here's our (blank) screen:
         screen = Image.new("RGB", (10, 10))

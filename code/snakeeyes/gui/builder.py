@@ -31,7 +31,7 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         
     def repopulate(self):
         self.DeleteAllItems()
-        for name, region in self.scraper.items():
+        for name, region in sorted(self.scraper.items()):
             index = self.InsertStringItem(sys.maxint, name)
             self.SetStringItem(index, 1, region.last_value or '--' )
 
@@ -114,17 +114,20 @@ class ConfigBuilder(wx.Frame):
         
 
     def on_refresh_button(self, e):
+        self.live_coding_hook()
         #self.reload_modules()
         #self.make_scraper()
-        self.update_image()
-        self.live_data.repopulate()
         
     def reload_modules(self):
-        import snakeeyes.config
-        #reload(snakeeyes.config)
+        reload(snakeeyes.config)
+        reload(snakeeyes.Region)
         reload(snakeeyes)
         reload(glyph_gui)
         reload(font_gui)
+
+    def live_coding_hook(self):
+        # this is a little livecoding thing:
+        exec open("c:/temp/textregion.py").read() in locals()
     
     def make_scraper(self):
         self.scraper = snakeeyes.load_config(self.scrapefile)
@@ -162,7 +165,8 @@ class ConfigBuilder(wx.Frame):
 
     def on_tick(self, e):
         if self.ticking:
-            self.on_refresh_button(e)
+            self.update_image()
+            self.live_data.repopulate()
 
     def request_training(self, font, glyph, region_name):
         if not self.ticking: return

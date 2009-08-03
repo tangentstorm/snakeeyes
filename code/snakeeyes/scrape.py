@@ -13,12 +13,64 @@ def count_black_pixels_on_row(img, y):
     row_img = img.crop((0, y, w, y + 1))
     return w - row_img.histogram()[-1]
 
+
+
+#:: (font metrics) -> (n -> [(ceiling, base, floor)] 
+def font_metrics(
+        line_h = 13,   # full height, including whitespace 
+        spacer =  2,   # line spacing
+        base_y = 11,   # baseline as depth from ceiling
+        font_d =  2    # font descent (for y,g,j, etc.)
+):
+    """
+    Just to be clear, this function returns a closure.
+    Call the closure to get the scraping rectangle for
+    the nth line of text.
+    
+    Use this when you know for certain where the text
+    will be and what the line height is:
+    """
+    assert (font_d + base_y == line_h), "invalid font metrics"
+    ceil_n  = lambda n: line_h * n + spacer
+    base_n  = lambda n: line_h * n + base_y
+    floor_n = lambda n: line_h * (n+1)
+    return lambda n:(ceil_n(n), base_n(n), floor_n(n))
+
+
+def calc_lines(metrics, num_lines):
+    """
+    Use this when you know the geometry of the font.
+    @param metrics: output of font_metrics(...) 
+    """
+    return map(metrics, range(num_lines))
+
 #:: img -> gen [ (top, baseline, bottom) ]
-def lines(img):
+def guess_lines(img_in, thresh = 0.58):
     """
-    this yields a sequence of top,baseline,bottom y pixels for the image
+    like calc_lines, this generates ceiling, baseline, floor
+    rows for a multi-line text block, but it's for use when 
+    the line spacing is unknown or irregular.
+
+    This works by scanning the line from top to bottom and 
+    making a guess at where the baseline is, based on the
+    number of darkened pixels in each row.
+    
+    For long lines, it's fairly accurate, but if the line is
+    very short, it can make large mistakes. For example, if
+    the line consists only of the word "Ten", it will probably
+    guess that the baseline is right under the cap of the T.
+    As you add more letters, it will tend to get much more 
+    accurate, because the heavy concentration of ink in the
+    cap of the T gets diluted.
+    
+    In practice, this routine is probably not very useful
+    except as an initial approximation to show the user, 
+    since unlike character width, line heights tend to be 
+    fairly consistent. Nonetheless, it's here if you 
+    need it. :)
     """
-    assert img.mode in ('1','L'), 'must be grayscale for now'
+    # assert img_in.mode in ('1','L'), 'must be grayscale for now'
+    img = img_in.convert('L')
     w, h = img.size
 
     last_empty_row = 0
@@ -38,7 +90,8 @@ def lines(img):
                 # found the baseline.
                 # 1.7 == 1/.58  ... it's upside down to avoid dividing by zero 
                 # (and also because I thought of it the other way around before)
-                if (ink_in_previous / ink_in_row > 1.7) and baseline is None:
+                if ((ink_in_previous / ink_in_row > 1 / thresh) 
+                    and baseline is None):
                     baseline = y
             else:
                 on_text = True

@@ -18,4 +18,8 @@ class Rectangle(object):
         width, height = self.size
         return (left, top, left + width, top + height)
 
-  
+    @property
+    def center(self):
+        x, y = self.pos
+        w, h = self.size
+        return (int(x + w / 2), int(y + h / 2))

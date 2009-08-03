@@ -7,11 +7,6 @@ import scrape
 import difflib
 import thread
 from fontdata import FontData
-
-# default location of chat window:
-w, h = 362,80
-x, y = 14,482
-
  
 def getText(image):
     chatfont = FontData("w:/app/poker/ps-chat.fontd")
@@ -49,4 +44,7 @@ def scrape_loop(callback=None):
 
  
 if __name__=="__main__":
+    # default location of chat window:
+    w, h = 362,80
+    x, y = 14,482
     thread.start_new_thread(scrape_loop)

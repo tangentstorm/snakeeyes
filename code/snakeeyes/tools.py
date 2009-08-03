@@ -27,18 +27,21 @@ class NullTool(object):
     
 
    
-class TextTool(Tool):
+class StringTool(Tool):
     """
     This tool breaks the image into glyphs and then
     parses them. It works for a single horizontal 
     line of text.
     """
     def __init__(self, font, darker_than=10):
-        super(TextTool, self).__init__(font)
+        super(StringTool, self).__init__(font)
         self.thresh = darker_than
     
     def recognize(self, img):
-        def pixel_check(a, b):
-            return max(img.getpixel((a, b))) < self.thresh
-        print "in here"
+        if img.mode == "1":
+            def pixel_check(a, b):
+                return img.getpixel((a, b)) == 0 
+        else:
+            def pixel_check(a, b):
+                return max(img.getpixel((a, b))) < self.thresh
         return scrape.str_from_img(img, self.font, pixel_check)

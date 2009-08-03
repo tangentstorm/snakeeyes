@@ -4,7 +4,7 @@ Created on Aug 1, 2009
 @author: michal
 """
 from Rectangle import Rectangle
-from Region import Region
+from Region import Region, TextRegion, BoxRegion, StretchBoxRegion
 from fontdata import FontData
 import ImageDraw
 import shelve
@@ -15,7 +15,7 @@ _KNOWN_FONTS = {}
 # config file vocabulary
 #-------------------------------------------------------
 
-from tools import Tool, NullTool, TextTool
+from tools import Tool, NullTool, StringTool
 
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))
@@ -23,8 +23,8 @@ def get_font(path):
 def get_font_tool(path):    
     return Tool(get_font(path))
 
-def get_text_tool(path, darker_than=10):    
-    return TextTool(get_font(path), darker_than)
+def get_string_tool(path, darker_than=10):    
+    return StringTool(get_font(path), darker_than)
 
 def train(tool):
     tool.font.training_mode = True
@@ -57,9 +57,9 @@ class ScrapeConfig(dict):
 
         """
         self.config = eval(open(path).read())
-        for name, (pos, size, tool, color) in self.config.items():
-            self[name] = Region(Rectangle(pos, size), tool, color)
-
+        for name, region in self.config.items():
+            self[name] = region
+            
     def draw_boxes(self, img):
         """
         this is a debug function that draws boxes on the
