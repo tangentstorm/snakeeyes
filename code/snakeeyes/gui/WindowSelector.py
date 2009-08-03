@@ -16,12 +16,12 @@ class WindowSelector(wx.Frame):
     def __init__(self, callback):
         super(WindowSelector, self).__init__(None, -1, "select window")
         self.filterText = wx.TextCtrl(self, -1, "5-Card")
-        self.Bind(wx.EVT_TEXT, self.OnTextChange, self.filterText)
+        self.Bind(wx.EVT_TEXT, self.on_text_change, self.filterText)
 
         self.tree = wx.TreeCtrl(self, size=(200,300),
                                 style=wx.TR_HIDE_ROOT)
-        self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnActivate)
-        self.updateTree()
+        self.tree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_activate)
+        self.rebuild_tree()
         
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.filterText)
@@ -30,7 +30,12 @@ class WindowSelector(wx.Frame):
         
         self.callback = callback
     
-    def updateTree(self):
+    def rebuild_tree(self):
+        """
+        rebuild the tree of windows.
+        @TODO: actually make it a tree! :)
+        [right now it just puts everything at the top level]
+        """
         tree = self.tree
         tree.DeleteAllItems()
         root = tree.AddRoot("windows")
@@ -45,11 +50,11 @@ class WindowSelector(wx.Frame):
             item = tree.AppendItem(root, win.text)
             tree.SetPyData(item, win)
             
-    def OnTextChange(self, e):
-        print "in here"
-        self.updateTree()
+    def on_text_change(self, e):
+        "rebuild tree as you type"
+        self.rebuild_tree()
                 
-    def OnActivate(self, e):
+    def on_activate(self, e):
         self.callback(self.tree.GetPyData(e.GetItem()))
     
     
