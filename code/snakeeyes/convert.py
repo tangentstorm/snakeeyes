@@ -123,12 +123,12 @@ def glint_to_strings(glint, height):
 
 #:: Glint -> Int -> Image
 def glint_to_img(glint, width, height):
-    img = Image.new('1', (width, height))
+    img = Image.new('1', (width, height), 1)
     for x in range(width):
         for y in range(height):
             test = pixel_to_glint(x, y, height)
             if test > glint:
                 break # last column, no more bits 
             elif test & glint:
-                img.putpixel((x, y), 1)
+                img.putpixel((x, y), 0)
     return img

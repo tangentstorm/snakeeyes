@@ -97,6 +97,7 @@ def test_full_grid(self):
     self.assertEquals((17, fo), the_fo) # 1 char, 1 in binary
     self.assertEquals((6,   r), the_r)
 
+    self.assertEquals(img.size[1], the_fo.size[1]) # heights should match!
 
 if __name__=="__main__":
     unittest.main()

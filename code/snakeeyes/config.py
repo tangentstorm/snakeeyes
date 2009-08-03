@@ -15,13 +15,16 @@ _KNOWN_FONTS = {}
 # config file vocabulary
 #-------------------------------------------------------
 
-from tools import Tool, NullTool
+from tools import Tool, NullTool, TextTool
 
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))
 
 def get_font_tool(path):    
     return Tool(get_font(path))
+
+def get_text_tool(path, darker_than=10):    
+    return TextTool(get_font(path), darker_than)
 
 def train(tool):
     tool.font.training_mode = True

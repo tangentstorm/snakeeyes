@@ -8,7 +8,9 @@ import Image
 
 def count_black_pixels_on_row(img, y):
     w, h = img.size
-    row_img = img.transform((w, 1), Image.EXTENT, (0, y, w, y + 1))
+    #@TODO: replace next line with proper img.crop()
+    #row_img = img.transform((w, 1), Image.EXTENT, (0, y, w, y + 1))
+    row_img = img.crop((0, y, w, y + 1))
     return w - row_img.histogram()[-1]
 
 #:: img -> gen [ (top, baseline, bottom) ]
@@ -65,8 +67,8 @@ def glyphs_from_line(img, pred):
     """
     (w, h) = img.size
     for glyph in scan_line(w, h, pred):
-        glyph_img = convert.glint_to_img(glyph.glint, *glyph.size)
-        assert glyph_img.size == glyph.size
+        glyph.img = convert.glint_to_img(glyph.glint, *glyph.size)
+        assert glyph.img.size == glyph.size
         yield glyph
 
     
@@ -134,7 +136,7 @@ def scan_line(img_width, img_height, pred):
         if state == IN_GLYPH and (not column_has_ink):
             # we have passed through the rightmost side of the
             # glyph and encountered a column of whitespace.
-            yield Glyph((since_x, 0), x - since_x, glint)
+            yield Glyph((since_x, 0), (x - since_x, img_height), glint)
             glint = 0
 
             # now that we've reported on the width, we can reset the column:
@@ -144,13 +146,13 @@ def scan_line(img_width, img_height, pred):
     # We've reached the right edge of the image.
     # We could still be in the middle of a glyph!
     if state==IN_GLYPH:
-        yield Glyph((since_x, 0), x + 1 - since_x, glint)
+        yield Glyph((since_x, 0), (x + 1 - since_x, img_height), glint)
 
 
 
 
-#:: int -> int -> FontData -> pred -> &bool -> gen (int, glyph_as_int)
-def getchars_g(w, h, fontd, pred, train=True):
+#:: int -> int -> FontData -> pred -> gen (int, glyph_as_int)
+def getchars_g(w, h, fontd, pred):
     """
     yields glints
     """
@@ -161,15 +163,21 @@ def getchars_g(w, h, fontd, pred, train=True):
 
 
 #:: int -> int -> FontData -> pred -> bool -> str
-def getstring(w, h, fontd, pred, train):
+def getstring(w, h, fontd, pred):
     """
     
     """
-    return ''.join([c for w, c in 
-                    getchars_g(w, h, fontd, pred, train)])
+    return ''.join([c for (w, c) in 
+                    getchars_g(w, h, fontd, pred)])
 
 
-    
+
+
+#:: Image.Image -> FontData -> pred -> String
+def str_from_img(img, fontd, pred):
+    # for now...
+    return "".join( fontd.recall( glyph ) 
+                    for glyph in glyphs_from_line(img, pred) )
 
 #:: char -> char -> int -> int -> FontData -> pred -> bool 
 def getBoundedString(start, end, width, height, fontd, pred, train=True):

@@ -7,15 +7,25 @@ from Rectangle import Rectangle
 
 class Glyph(Rectangle):
 
-    def __init__(self, pos, width, glint):
+    def __init__(self, pos, size, glint):
         '''
         Constructor
         '''
-        height = 1
-        super(Glyph, self).__init__(pos, (width, height))
-        self.width = width
+        super(Glyph, self).__init__(pos, size)
+        self.width = size[0]
         self.glint = glint
+        self.img = None
 
+
+    # image interface:
+    def tostring(self):
+        return self.img.tostring()
+    
+    def convert(self, *a, **kw):
+        return self.img.convert(*a, **kw)
+
+
+    # old (width, glint) interface:
     def as_tuple(self):
         return (self.width, self.glint)
 

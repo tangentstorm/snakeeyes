@@ -3,25 +3,42 @@ Created on Aug 2, 2009
 
 @author: michal
 '''
+import scrape
+
 class Tool(object):
     """
-    A Tool combines FontData and a GlyphFilter
+    This is the simplest tool. It just maps
+    an image directly to a string through a
+    FontData object.
     """
-    def __init__(self, font, filter=None):
+    def __init__(self, font):
         self.font = font
-        self.filter = filter
-        
-    def recognize(self, glyph):
-        return self.font.recall(glyph)
+
+    def recognize(self, img):
+        return self.font.recall(img)
     
     
 class NullTool(object):
     """
     A dummy tool that does nothing.
     """
-    def recognize(self, glyph):
+    def recognize(self, img):
         return None    
     
 
    
- 
+class TextTool(Tool):
+    """
+    This tool breaks the image into glyphs and then
+    parses them. It works for a single horizontal 
+    line of text.
+    """
+    def __init__(self, font, darker_than=10):
+        super(TextTool, self).__init__(font)
+        self.thresh = darker_than
+    
+    def recognize(self, img):
+        def pixel_check(a, b):
+            return max(img.getpixel((a, b))) < self.thresh
+        print "in here"
+        return scrape.str_from_img(img, self.font, pixel_check)
