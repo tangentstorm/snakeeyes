@@ -6,24 +6,29 @@ Created on Aug 1, 2009
 from Rectangle import Rectangle
 from Region import Region
 from fontdata import FontData
-from tools import Tool, NullTool
 import ImageDraw
 import shelve
 
+_KNOWN_FONTS = {}
+
+
+# config file vocabulary
+#-------------------------------------------------------
+
+from tools import Tool, NullTool
+
+def get_font(path):
+    return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))
+
+def get_font_tool(path):    
+    return Tool(get_font(path))
 
 def train(tool):
     tool.font.training_mode = True
     return tool
 
 
-_KNOWN_FONTS = {}
-
-def get_font_tool(path):
-    if path in _KNOWN_FONTS:
-        font = _KNOWN_FONTS[path]
-    else:
-        font = _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))
-    return Tool(font)
+#-------------------------------------------------------
 
 
 class ScrapeConfig(dict):
@@ -40,8 +45,13 @@ class ScrapeConfig(dict):
             self.read_from(path)
 
             
-    def read_from(self,path):
+    def read_from(self, path):
         """
+        path points to a file containing a single python expression
+        which should evaluate to a dict with type:
+
+               { name : ( (x,y), (w, h), tool, color }
+
         """
         self.config = eval(open(path).read())
         for name, (pos, size, tool, color) in self.config.items():
@@ -56,3 +66,5 @@ class ScrapeConfig(dict):
         for name, region in self.items():
             r = region.rect
             draw.rectangle([r.pos, r.far_corner()], outline=region.color)        
+
+
