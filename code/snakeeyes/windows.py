@@ -5,7 +5,6 @@ Created on Jul 31, 2009
 """
 import win32gui, win32ui
 import ImageGrab
-import re
 from win32gui import GetWindowRect, GetClientRect, ClientToScreen
 
 class Window(object):
@@ -17,6 +16,10 @@ class Window(object):
         
     @property
     def text(self):
+        """
+        generally corresponds to the title
+        but also applies to labels, etc
+        """
         return win32gui.GetWindowText(self.hwnd)
     
     @property
@@ -63,6 +66,21 @@ class Window(object):
     def move_to(self, x, y):
         win32gui.MoveWindow(self.hwnd, 0, 0, self.width, self.height, True)
 
+    def grab_pixel(self, x, y):
+        " x,y -> (r,g,b) "
+        win = win32ui.CreateWindowFromHandle(self.hwnd)
+        dc = win.GetWindowDC()
+        px = hex(dc.GetPixel(x, y))
+    
+        # @TODO: just do the math :)
+        # note that the values are "backwards" from rgb
+        if len(px) < 4: px += ("0" * (8-len(px)))
+        b = int(px[2:4], 16)
+        g = int(px[4:6], 16)
+        r = int(px[6:8], 16)
+        
+        return (r,g,b)
+
 
 def all_hwnds(condition=lambda a:True):
     """
@@ -87,11 +105,8 @@ def where(condition):
 def named(txt):
     return where(lambda win: win.text.count(txt))[0]
 
-class WindowTree(object):
-    """
-    """
-    def __init__(self, *args):
-        '''
-        Constructor
-        '''
-        
+
+def grab_pixel(hwnd, (x, y)):
+    return Window(hwnd).grab_pixel(x,y)
+
+     
