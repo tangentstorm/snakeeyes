@@ -5,13 +5,12 @@ import ImageGrab
 import ImageOps
 import scrape
 import difflib
-import wx
 import thread
 from fontdata import FontData
 
 # default location of chat window:
-w,h = 362,80
-x,y = 14,482
+w, h = 362,80
+x, y = 14,482
 
  
 def getText(image):
