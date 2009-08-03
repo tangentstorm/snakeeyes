@@ -5,7 +5,7 @@ import wx, os, sys
 import wx.py as py
 import Image
 sys.path.insert(0, 'w:/app/ceomatic')
-from gridliner import Cursor, ListView
+from cursor import Cursor, ListView
 import scrape
 
 #PNGDIR=r'W:\app\poker\hwnd6359358' # full tilt
@@ -186,45 +186,46 @@ class PngScraperFrame(wx.Frame):
         gc.SetBrush(wx.Brush(ink))
         return gc
 
-    def drawWords(self):
-        chars = self.chars()
-        inks = wx.Color(0x99, 0xcc, 0xff, 0x88) , wx.Color(0x99, 0xff, 0xcc, 0x88)
+# @TODO: re-enable drawWords. it was cool. :)
+#    def drawWords(self):
+#        chars = self.chars()
+#        inks = wx.Color(0x99, 0xcc, 0xff, 0x88) , wx.Color(0x99, 0xff, 0xcc, 0x88)
+#
+#        gc = self.getGC()
+#
+#        i = 0
+#        for c in chars:
+#            if c[4] not in ('', ' '):
+#
+#                ink = inks[i % 2]
+#                i += 1 
+#                
+#                gc.SetPen(wx.Pen(ink))
+#                gc.SetBrush(wx.Brush(ink))
+#                
+#                gc.DrawRectangle(*c[:4])
 
-        gc = self.getGC()
+#    def drawFirstUnkowns(self, cutoff=200, mode='L'):
+#        "I *THINK* this was to show a new char to learn in context."
+#        chars = self.chars(mode, cutoff) 
+#
+#        seen = {}
+#        
+#        gc = self.getGC()
+#        ink = wx.Color(0xff, 0x00, 0x00, 0x88)
+#        gc.SetPen(wx.Pen(ink))
+#        gc.SetBrush(wx.Brush(ink))
+#                
+#        i = 0
+#        for c in chars:
+#            if type(c[4]) in (int,long):
+#                if c[4] not in seen:
+#                    gc.DrawRectangle(*c[:4])
+#                    seen[c[4]]=True
 
-        i = 0
-        for c in chars:
-            if c[4] not in ('', ' '):
 
-                ink = inks[i % 2]
-                i += 1 
-                
-                gc.SetPen(wx.Pen(ink))
-                gc.SetBrush(wx.Brush(ink))
-                
-                gc.DrawRectangle(*c[:4])
-
-
-    def drawFirstUnkowns(self, cutoff=200, mode='L'):
-        chars = self.chars(mode, cutoff) 
-
-        seen = {}
-        
-        gc = self.getGC()
-        ink = wx.Color(0xff, 0x00, 0x00, 0x88)
-        gc.SetPen(wx.Pen(ink))
-        gc.SetBrush(wx.Brush(ink))
-                
-        i = 0
-        for c in chars:
-            if type(c[4]) in (int,long):
-                if c[4] not in seen:
-                    gc.DrawRectangle(*c[:4])
-                    seen[c[4]]=True
-                
-
-    def chars(self, mode='L', cutoff=200):
-        return list(scrape.letters(self.im.convert(mode), cutoff))
+#    def chars(self, mode='L', cutoff=200):
+#        return list(scrape.letters(self.im.convert(mode), cutoff))
         
     def lines(self, mode="L"):
         return list(scrape.lines(self.im.convert(mode)))

@@ -1,4 +1,3 @@
-
 """
 Chat Scraper (Pokerstars only, for now)
 """
@@ -8,19 +7,15 @@ import scrape
 import difflib
 import wx
 import thread
+from fontdata import FontData
 
 # default location of chat window:
 w,h = 362,80
 x,y = 14,482
 
-
-
-
-
-
  
 def getText(image):
-    chatfont = scrape.FontData("w:/app/poker/ps-chat.fontd")
+    chatfont = FontData("w:/app/poker/ps-chat.fontd")
     for top,base,bottom in scrape.lines(image):
         
         def hasInk(a,b):
@@ -55,8 +50,4 @@ def scrape_loop(callback=None):
 
  
 if __name__=="__main__":
-    app = wx.App(redirect=False)
-    win = ScrapeFrame(None, pos=(x,y+h+10))
-    win.init()
-    thread.start_new_thread(scrape_loop, (win.updateImage,))
-    app.MainLoop()
+    thread.start_new_thread(scrape_loop)

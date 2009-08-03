@@ -8,6 +8,7 @@ import unittest
 
 from img_test import *
 from ocr_test import *
+from scan_test import *
 
 if __name__ == '__main__':
     unittest.main()

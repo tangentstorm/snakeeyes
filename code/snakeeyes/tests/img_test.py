@@ -4,11 +4,13 @@ Tests the basic use of the system, for recognizing images.
 import unittest
 import Image, ImageDraw
 from snakeeyes import fontdata, config, scrape
-from snakeeyes.scrape import Region, Rectangle
+from snakeeyes.Rectangle import Rectangle
+from snakeeyes.Region import Region
+from snakeeyes.tools import Tool
 
 class ImageTest(unittest.TestCase):
 
-    def test_simple(self):
+    def test(self):
         """
         get a basic font working
         """
@@ -49,7 +51,7 @@ class ImageTest(unittest.TestCase):
         # now that our FontData recognizes the shape,
         # we can set up a scrape region that detects it
         # see ScrapeConfig for how to make this simpler
-        reg = Region(Rectangle((0, 0), glyph.size), scrape.Tool(font))
+        reg = Region(Rectangle((0, 0), glyph.size), Tool(font))
         
         # now here's our (blank) screen:
         screen = Image.new("RGB", (10, 10))

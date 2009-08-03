@@ -3,9 +3,11 @@ Created on Aug 1, 2009
 
 @author: michal
 """
-import ImageDraw
-from scrape import Region, Tool, Rectangle, NullTool
+from Rectangle import Rectangle
+from Region import Region
 from fontdata import FontData
+from tools import Tool, NullTool
+import ImageDraw
 import shelve
 
 

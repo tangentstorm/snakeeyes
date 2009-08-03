@@ -1,74 +1,12 @@
 
-import wx
-import os
-import scrape
-import fulltilt, pokerstars
 from wx.py.shell import ShellFrame
-import replayer
-import time, math
+import scrape, windows
+import math, os, time, math, wx
 import win32gui
 
-fulltilt.learnNewChar = lambda fontd, bmp, height : '[@TOLEARN]'
+IMGROOT = "/tmp"
+WAITING, CAPTURED = 0,1
 
-IMGROOT = "w:/app/poker/"
-WAITING, MYTURN = 0,1
-
-class ThinkFrame(wx.Frame): # adapted from ceomatic.wxtimer
-    def __init__(self, parent, id, title, **kw):
-        kw.setdefault('size', (300,20))
-        wx.Frame.__init__(self, parent, id, title,
-                          style= wx.FRAME_NO_TASKBAR
-                               | wx.FRAME_TOOL_WINDOW # no alt-tab
-                               | wx.SIMPLE_BORDER
-                               | wx.STAY_ON_TOP
-                          ,**kw)
-
-        # draw background image
-        self.image = wx.StaticBitmap(self, bitmap=wx.EmptyBitmap(435, 85))
-        img = wx.Image("stopandthink.png", wx.BITMAP_TYPE_PNG)
-        self.image.SetBitmap(wx.BitmapFromImage(img))
-        self.Fit()
-
-        # set up the clock display.
-        self.clocktext = wx.StaticText(self.image, -1, "0:00", pos=(340, 6))
-        self.clocktext.SetForegroundColour("white")
-        self.clocktext.SetBackgroundColour("#254B66")        
-        
-        self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.onTick)
-        self.timeLimit = 0
-        self.startTime = 2 # this makes timeLeft return -1 by default
-
-    def go(self, seconds=10):
-        self.timeLimit = seconds
-        self.startTime = time.time()
-        self.timer.Start(1000) # 1 second intervals
-
-        # show timer immediately
-        self.onTick(None)
-        self.Show()
-
-    def timeLeft(self):
-        return self.timeLimit - math.floor((time.time() - self.startTime))
-
-    def onTick(self, evt):
-        secs = self.timeLeft()
-        mins = secs / 60
-        smod = secs % 60
-        self.clocktext.SetLabel("%02i:%02i" % (mins,smod))
-        
-        # time's up.
-        if secs <= 0:
-            self.onTimeOut()
-
-    def onTimeOut(self):
-        self.timer.Stop()
-        self.Hide()
-
-    def coverBottomRightCorner(self, hwnd):
-        w, h = self.Size
-        x,y,x2,y2=win32gui.GetWindowRect(hwnd)
-        self.Position=(x2-w-4, y2-h-4)
 
 class CaptureFrame(wx.Frame):
     def __init__(self, hwnd, *a, **kw):
@@ -86,15 +24,12 @@ class CaptureFrame(wx.Frame):
 
         self.SetSizer(box)
         self.SetAutoLayout(True)
-
-        self.thinker = ThinkFrame(self, -1, "stop and think!")
-        
+       
         self.locals = {
             'self':self,
             'wx': wx,
             'hwnd': hwnd,
             'scrape':scrape,
-            'fulltilt':fulltilt
             }
         self.shellFrame = ShellFrame(None, -1, "pyshell", locals=self.locals)
         self.locals['shell'] = self.shellFrame.shell
@@ -111,24 +46,20 @@ class CaptureFrame(wx.Frame):
             os.mkdir(imdir)
         return imdir
 
+    def is_time_to_capture(self):
+        # @TODO: override this to schedule the captures
+        return False
+
     def OnIdle(self, e):
         if not self.txt.Value: return
-        if self.thinker.IsShown(): return
         # and give the window a chance to redraw:
-        if self.thinker.timeLeft() > -2: return
         
-        myturn = pokerstars.StarScraper.h_isMyTurn(self.targetHwnd())
-        
-        if myturn and self.state == WAITING:
-            self.state = MYTURN
+        time_to_capture = self.is_time_to_capture()
+        if time_to_capture and self.state == WAITING:
+            self.state = CAPTURED
             self.grabImage()
-            self.thinker.coverBottomRightCorner(self.targetHwnd())
-            self.thinker.go(5)
 
-            scr = pokerstars.StarScraper(self.im)
-            print scr.asTable()
-
-        elif self.state==MYTURN and not myturn:
+        elif self.state==CAPTURED and not time_to_capture:
             self.state = WAITING
 
     def targetHwnd(self):
@@ -149,7 +80,7 @@ class CaptureFrame(wx.Frame):
         return '%s/%05i.png' % (self.imageDir(), self.lastCount)
 
     def grabImage(self, e=None):
-        self.im = scrape.grabImage(self.targetHwnd())
+        self.im = windows.Window(self.targetHwnd()).as_image()
         imName = self.nextName()
         self.im.save(imName)
         print "saved %s" % imName
@@ -159,11 +90,6 @@ class CaptureFrame(wx.Frame):
 
 if __name__=='__main__':
     hwnd = ''
-    for hwnd, name in pokerstars.tableWindows():
-        if name.count("Table"):
-            print hwnd, name
-            break
-
     app = wx.App(redirect=False)
     frame = CaptureFrame(hwnd, None, -1, "capture")
     frame.Show()

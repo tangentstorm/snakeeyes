@@ -1,116 +1,21 @@
-# scrape a win32 window or image so we can see what's on screen
+"""
+This contains the basic algorithms for scraping text from images.
+"""
+import sys
+import Image
 
-import os, sys
-import win32gui, win32ui
-import Image, ImageGrab, ImageDraw
-import windows
-import warnings
-from fontdata import FontData
-
-
-class Region(object):
-    """
-    This is the top level scraping tool.
-    """
-    def __init__(self, rect, tool=None, color=None):
-        self.rect = rect
-        self.tool = tool
-        self.color = color
-        self.last_value = None
-        
-    def take_snapshot(self, screen):
-        """
-        screen:image -> cropped_area:image
-        """
-        self.last_snapshot = screen.crop(self.rect.as_quad())
-        return self.last_snapshot
-    
-    def scrape(self, screen):
-        """
-        screen:image -> contents:(Maybe str)
-        """
-        self.take_snapshot(screen)
-        self.last_value = self.tool.recognize(self.last_snapshot)
-        return self.last_value
+#@TODO: remove these constants. Let Chunker infer by glyph coordinates    
+NEW_GLYPH = 0
+SPACE = -1
 
 
-class Tool(object):
-    """
-    A Tool combines FontData and a GlyphFilter
-    """
-    def __init__(self, font, filter=None):
-        self.font = font
-        self.filter = filter
-        
-    def recognize(self, glyph):
-        return self.font.recall(glyph)
-    
-    
-class NullTool(object):
-    def recognize(self, glyph):
-        return None    
-    
-
-class Rectangle(object):
-    def __init__(self, pos, size):
-        self.pos = pos
-        self.size = size
-    
-    def far_corner(self):
-        left, top, right, bottom = self.as_quad()
-        return (right, bottom)
-    
-    def as_quad(self):
-        left, top = self.pos
-        width, height = self.size
-        return (left, top, left + width, top + height)
-
-
-        
-
-
-
-
-
-
-
-## window finding ##########################################
-
-def listwindows():
-    warnings.warn("deprecated. use windows.all_hwnds")
-    return windows.all_hwnds()
-
-
-## screen capture ##########################################
-
-def grabImage(hwnd):
-    bounds = win32gui.GetWindowRect(hwnd)
-    im = ImageGrab.grab(bounds)
-    return im
-
-def grabPixel(hwnd, (x, y)):
-    win = win32ui.CreateWindowFromHandle(hwnd)
-    dc = win.GetWindowDC()
-    px = hex(dc.GetPixel(x, y))
-
-    # @TODO: just do the math :)
-    # note that the values are "backwards" from rgb
-    if len(px) < 4: px += ("0" * (8-len(px)))
-    b = int(px[2:4], 16)
-    g = int(px[4:6], 16)
-    r = int(px[6:8], 16)
-    
-    return (r,g,b)
-    
-            
-## OCR stuff (very primitive) ##############################
-
-def lines(im):
+#:: img -> gen [ (top, baseline, bottom) ]
+def lines(img):
     """
     this yields a sequence of top,baseline,bottom y pixels for the image
     """
-    assert im.mode in ('1','L'), 'must be grayscale for now'
-    w,h = im.size
+    assert img.mode in ('1','L'), 'must be grayscale for now'
+    w,h = img.size
 
     lastBlankLine = 0
     alreadyOnText = False
@@ -119,7 +24,7 @@ def lines(im):
 
     for y in range(h):
 
-        countDarks = w - im.transform((w,1), Image.EXTENT, 
+        countDarks = w - img.transform((w,1), Image.EXTENT, 
                                       (0,y,w,y+1)).histogram()[-1]
 
         if countDarks > 0: # then there are some dark pixels
@@ -144,12 +49,26 @@ def lines(im):
             # moving through whitespace
             lastBlankLine = y
 
-            
 
 
-def scan_matrix(scan_width, scan_height, xy_test, space_size=3):
+#:: img:Image -> ink_p:(x:int -> y:int -> bool) -> [glyph]
+def glyphs_from_line(img, pred):
     """
-    xy_test is a function that takes arguments (x,y)
+    This is the new interface I want to use.
+    @TODO: better yet, drop img and just use ink_p:pred
+    """
+    (w, h) = img.size
+    return scan_line(w, h, pred)
+
+
+    
+    
+#:: w:int, h:int, pred:(x->y->bool) ->  gen [(bitmap_number, width)]
+def scan_line(w, h, pred, space_size=3):
+    """
+    @TODO: remove w and h
+    
+    @param pred: a function that takes arguments (x,y)
     and returns true or false. The idea is that it
     should return True if the pixel at x,y is part
     of a character, probably by checking the color
@@ -177,26 +96,24 @@ def scan_matrix(scan_width, scan_height, xy_test, space_size=3):
     which you'll have to decipher manually.
     """
 
-    #lines = [[] for _ in range(scan_height)]
-
     bitmap = 0
     charX  = 0 # x offset of the current character
     inSpace = True # we need the initial leading space
     
-    for x in range(scan_width):
+    for x in range(w):
 
         hasInk = False
         spaceW = 0
-        for y in range(scan_height):
+        for y in range(h):
 
-            if xy_test(x,y):
+            if pred(x,y):
                 hasInk = True
 
                 if inSpace and not spaceW:
                     spaceW = charX
                     charX = 0
                 
-                bitmap += 1 << (y + (charX * scan_height))
+                bitmap += 1 << (y + (charX * h))
 
         if hasInk:                
             if spaceW > space_size:
@@ -223,262 +140,46 @@ def scan_matrix(scan_width, scan_height, xy_test, space_size=3):
 
 
 
-## test case
 
-import unittest
-from narrative import testcase
-
-@testcase
-def testscan(self):
-    testdata = '..1....11.....111'
-
-    # the result should be width/char pairs
-    # in this case the chars are just the binary numbers
-    wcs = list(scan_matrix(len(testdata), 1, (lambda a,b: testdata[a] == '1'), space_size=1))
-    
-    self.assertEquals((2,0), wcs[0]) # 2 dots (space)
-    self.assertEquals((1,1), wcs[1]) # 1 char, 1 in binary
-    self.assertEquals((4,0), wcs[2])
-    self.assertEquals((2,3), wcs[3]) # 2 char, 1 in binary
-
-
-@testcase
-def multiline(self):
-
-    # the word For from a scan of Mentally Incontinent
-    testdata = ['....................................',
-                '....................................',
-                '....................................',
-                '.......#######......................',
-                '......########......................',
-                '......###...........................',
-                '......###.......#####...######......',
-                '......######...##..###..#####.......',
-                '......#######.##....##..##..........',
-                '......###.....##....###.##..........',
-                '......###.....##....###.##..........',
-                '......###.....##....##..##..........',
-                '......###.....###...##..##..........',
-                '......###......#######..##..........',
-                '.......#........#####...#...........',
-                '....................................',
-                '....................................']
-    #          0|     6|             17|1|   6|     6|
-
-    
-
-    fo = 11656954525901520401809650090941306687965691406109462313538109468335093405284899504112
-    r  = 2475936747400903850442391488
-    
-    # the result should be width/char pairs
-    # in this case the chars are just the binary numbers
-    wcs = list(scan_matrix(len(testdata[0]), len(testdata),
-                           (lambda a,b: testdata[b][a] == '#'), space_size=4))
-    
-    self.assertEquals((6,   0), wcs[0]) # 2 dots (space)
-    self.assertEquals((17, fo), wcs[1]) # 1 char, 1 in binary
-    self.assertEquals((6,   r), wcs[2])
-    self.assertEquals((6,   0), wcs[3]) # 2 char, 1 in binary
-
-
-if __name__=="__main__":
-    unittest.main()
-
-
-## training ################################################
-
-        
-def matrix_from_bmp(bmp, height):
+#:: int -> int -> FontData -> pred -> &bool -> gen (int, glyph_as_int)
+def getchars_g(w, h, fontd, pred, train=True):
     """
-    This takes one of the bitmaps returned from scan_matrix
-    and renders it as a multi-line string.
+    yields glints
     """
-    lines = []
-    for x in range(height):
-        lines.append([])
+    for charW, glint in scan_line(w, h, pred):
+        yield charW, fontd[glint]
 
-    count = 0
+
+
+
+#:: int -> int -> FontData -> pred -> bool -> str
+def getstring(w, h, fontd, pred, train):
+    """
     
-    shrink = bmp
-    while shrink:
-        shrink, bit = (shrink /2), (shrink %2)
-        if bit:
-            lines[count % height].append("#")
-        else:
-            lines[count % height].append(".")
-        count += 1
-
-    # draw the baseline:
-    lines.insert(-2,'-'*len(lines[1]))
-    return "\n".join(["".join(line) for line in lines])
+    """
+    return ''.join([c for w, c in 
+                    getchars_g(w, h, fontd, pred, train)])
 
 
-def number_to_image(gm, height):
-    matrix = matrix_from_bmp(gm, height)
-    img = Image.new('1', (len(lines[0]), height))
-    for y, line in enumerate(matrix):
-        for x, char in enumerate(line):
-            img.putpixel((x, y), 1 if char=="#" else 0)
     
 
-def learnNewChar(fontd, bmp, height, sofar):
-    print "context: {%s}" % ''.join(sofar)
-    print matrix_from_bmp(bmp, height)
-    char = raw_input("what is it?")
-    print "fontd[%s]=%s" % (bmp, char)
-    fontd[bmp]=char
-    sofar.append(char)
-    return char
-
-def learnFromImage(fontd, image):
-    if not image.__class__.__name__=="Image":
-        image = image.copy()
-    else: pass
-    h = hash(tuple(image.getdata()))
-    if h in fontd:
-        return fontd[h]
-    else:
-        image.show()
-        char = raw_input("showing image. what is it?")
-        print "fontd[%s]=%s" % (h, char)
-        fontd[h]=char
-        return char
-
-def getchars_g(w, h, fontd, checker, train=True):
-    sofar = []
-    for charW, bmp in scan_matrix(w, h, checker):
-        if bmp in fontd:
-            sofar.append(fontd[bmp])
-            yield charW, fontd[bmp]
-        elif train:
-            yield charW, learnNewChar(fontd, bmp, h, sofar)
-        else:
-            yield charW, bmp
-
-
-def getstring(*a, **kw):
-    return ''.join([c for w, c in getchars_g(*a, **kw)])
-
-
-def getBoundedString(start, end, w, h, fontd, checker, train=True):
+#:: char -> char -> int -> int -> FontData -> pred -> bool 
+def getBoundedString(start, end, width, height, fontd, pred, train=True):
     """
-    This is designed for capturering a solid box that
+    This is designed for capturing a solid box that
     changes width over a fixed background. To use, assign
     chars in the font to the vertical box line and (I use '|')
     and pass those chars in as the bounds
+    
+    @TODO: locate box with flood fill, then use normal getstring 
     """
     res = []
     started = False
-    for w, c in getchars_g(w, h, fontd, checker, False):
+    for w, c in getchars_g(width, height, fontd, pred, False):
         if started and c == end:
             break
         elif started:
-            if type(c) in (int, long):
-                if train:
-                    res.append(learnNewChar(fontd, c, h))
-                else: pass # ignore out of bounds data
-            else:
-                res.append(c)
+            res.append(c)
+            return ''.join(res)
         elif c == start:
             started = True
-    return ''.join(res)
-
-def train(filename):
-    for each in glyphs(Image.open(filename).convert('L'), 200, train=True):
-        print each
-
-def recognize(filename):
-    lastTop = 0
-    
-    for each in glyphs(Image.open(filename).convert('L'), 200, train=False):
-
-        x, top, charW, scanH, char = each
-        
-        if lastTop and (top != lastTop):            
-            sys.stdout.write("\n") # line break
-            if top - lastTop > 20:
-                sys.stdout.write("\n") # paragraph break
-                
-        lastTop = top
-
-        if type(char) == str:
-            sys.stdout.write(char)
-        else:
-            sys.stdout.write('#')
-
-
-
-
-
-## "advanced" ocr... attempts to deal with antialiased text
-
-def glyphs(png, cutoff, train=False):
-    """
-    generates (x,y, width, height, char) tuples for each glyph in an image.
-    glyphs may contain several characters because this system cannot
-    compensate for kerning. This doesn't really work too well yet.
-    """
-    for top, baseLine, bottom in lines(png.convert('1')):
-
-        scanH = top-bottom #16 #top-bottom
-        fakeTop = top #baseLine - 14
-        fakeBot = bottom # baseLine + 3
-
-        def hasInk(a,b):
-            return png.getpixel((a,b+fakeTop)) < cutoff # re-alias for clarity
-
-        w,h = png.size
-
-        x = 0
-        for charW, bmp in scan_matrix(w, scanH, hasInk):
-
-            if bmp > 0:
-
-                icon = iconify(png.copy().crop((x, top, x+charW, top+scanH)))
-                code = icon2num(icon)
-
-                if code in miFont:
-                    char = miFont[code]
-                elif train:
-                    print bmp
-                    print matrix_from_bmp(bmp, scanH)
-                    char = raw_input("what is it?")
-                    miFont[code]=char
-                else:
-                    char = code
-                
-                yield x, top, charW, scanH, char
-
-            elif bmp == 0 and not train:
-                yield x, top, charW, scanH, ' '
-                
-            x += charW
-
-
-
-
-## normalization
-
-"""
-sometimes there can be hundreds of subtly different pixel
-representations of the same characters, thanks to anti-aliasing.
-This is an attempt to reduce the complexity by converting
-each character to a 5x5 2-bit icon.
-
-That still provides for 33,554,432 possible characters, but
-the hope is that 
-"""
-
-def iconify(im):
-    """
-    converts an image to a 5x5 icon
-    """
-    def cutoff(pixel):
-        return 255 if pixel > 240 else 0
-    return Image.eval(im.resize((5,5)), cutoff).convert('1')
-
-def icon2num(icon):
-    def normalize(pixel):
-        return str(pixel/255)
-    return int(''.join(map(normalize, icon.getdata())),2)
-

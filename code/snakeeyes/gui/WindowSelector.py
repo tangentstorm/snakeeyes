@@ -55,20 +55,20 @@ class WindowSelector(wx.Frame):
     
 if __name__ == "__main__":
     
-    selector = None
+    SELECTOR = None
     
     def make_builder(win):
-        global selector
+        "replace this with whatever you want."
+        
         print "making new window for", win.text
         import builder
         reload(builder)
         win.bringToFront()
         path = 'w:/app/poker/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
-        pb = builder.ConfigBuilder(path, win, selector)
-        pb.Show()
+        builder.ConfigBuilder(path, win, SELECTOR).Show()
     
     app = wx.App(redirect=False)
     
-    selector = WindowSelector(make_builder)
-    selector.Show()
+    SELECTOR = WindowSelector(make_builder)
+    SELECTOR.Show()
     app.MainLoop()   
