@@ -37,7 +37,7 @@ class ImageTest(unittest.TestCase):
 
         # it doesn't know about our font yet, but we can teach it:
         self.assertFalse(font.contains(glyph))
-        font.learn(glyph, value='red +')
+        font.learn(glyph, grapheme='red +')
         self.assertTrue(font.contains(glyph))
 
         # note that we don't actually care about the 
