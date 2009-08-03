@@ -1,13 +1,15 @@
 """
 This contains the basic algorithms for scraping text from images.
 """
-import sys
+from Glyph import Glyph
+import convert
 import Image
 
-#@TODO: remove these constants. Let Chunker infer by glyph coordinates    
-NEW_GLYPH = 0
-SPACE = -1
 
+def count_black_pixels_on_row(img, y):
+    w, h = img.size
+    row_img = img.transform((w, 1), Image.EXTENT, (0, y, w, y + 1))
+    return w - row_img.histogram()[-1]
 
 #:: img -> gen [ (top, baseline, bottom) ]
 def lines(img):
@@ -15,56 +17,64 @@ def lines(img):
     this yields a sequence of top,baseline,bottom y pixels for the image
     """
     assert img.mode in ('1','L'), 'must be grayscale for now'
-    w,h = img.size
+    w, h = img.size
 
-    lastBlankLine = 0
-    alreadyOnText = False
-    lastCount = 0
-    baseLine = None
-
+    last_empty_row = 0
+    on_text = False
+    ink_in_previous = 0
+    baseline = None
+    
     for y in range(h):
 
-        countDarks = w - img.transform((w,1), Image.EXTENT, 
-                                      (0,y,w,y+1)).histogram()[-1]
+        ink_in_row = float(count_black_pixels_on_row(img, y))
 
-        if countDarks > 0: # then there are some dark pixels
+        if ink_in_row > 0: # then there are some dark pixels
 
-            if alreadyOnText:
-                if float(lastCount)/countDarks > 1.7 and baseLine is None:
-                    baseLine = y
+            if on_text:
+                # if there's a 40% drop in pixels from one row to the next
+                # across a line of text, chances are pretty good that we
+                # found the baseline.
+                # 1.7 == 1/.58  ... it's upside down to avoid dividing by zero 
+                # (and also because I thought of it the other way around before)
+                if (ink_in_previous / ink_in_row > 1.7) and baseline is None:
+                    baseline = y
             else:
-                alreadyOnText = True
-            lastCount = countDarks
+                on_text = True
 
-        elif alreadyOnText:
+            ink_in_previous = ink_in_row
+
+        elif on_text: # was on text, now no ink, so..
 
             # if we haven't found the baseline yet, then this IS the
             # baseline. (Happens on lines with no low-hanging marks.)
-            yield lastBlankLine, baseLine or y-1, y -1
-            alreadyOnText = False
-            baseLine = None
-            countWhitePixels = None
+            yield last_empty_row, baseline or y-1, y -1
+            on_text = False
+            baseline = None
 
         else:
             # moving through whitespace
-            lastBlankLine = y
+            last_empty_row = y
 
 
 
-#:: img:Image -> ink_p:(x:int -> y:int -> bool) -> [glyph]
+#:: img:Image -> ink_p:(x:int -> y:int -> bool) -> [(width, glint)]
 def glyphs_from_line(img, pred):
     """
     This is the new interface I want to use.
     @TODO: better yet, drop img and just use ink_p:pred
     """
     (w, h) = img.size
-    return scan_line(w, h, pred)
-
+    for glyph in scan_line(w, h, pred):
+        glyph_img = convert.glint_to_img(glyph.glint, *glyph.size)
+        assert glyph_img.size == glyph.size
+        yield glyph
 
     
+IN_SPACE = 0
+IN_GLYPH = 1
     
-#:: w:int, h:int, pred:(x->y->bool) ->  gen [(bitmap_number, width)]
-def scan_line(w, h, pred, space_size=3):
+#:: w:int, h:int, pred:(x->y->bool) ->  gen [(width, glint)]
+def scan_line(img_width, img_height, pred):
     """
     @TODO: remove w and h
     
@@ -78,65 +88,63 @@ def scan_line(w, h, pred, space_size=3):
     from left to right, top to bottom, and yields a
     number representing the bitmap whenever a vertical
     gap is found.
+        
+    Would anything really change if the language were not
+    left-to right? Not in here. We could do a transformation
+    on the incoming image and everything should work fine.
 
     So, assuming scan_height == 3 this:
 
-    .X..X
-    X...X
-    .X..X
+    .#..#
+    ##..#
+    .#..#
 
-    yields: [int('010101',2) , int('111', 2)]
+    yields two glyphs.
 
-    Note that in In fixed width fonts, there are gaps
-    between each character, but in variable width fonts,
-    the characters will run together due to kerning.
+    Note that in variable width fonts, characters may 
+    run together due to kerning.
 
-    That means the bitmaps generated here may respond
-    to any number of strung-together-characters, each of
-    which you'll have to decipher manually.
+    That means the glyphs generated here may respond
+    to any number of characters. At the moment, you'll
+    have to train each possible combination manually.
     """
 
-    bitmap = 0
-    charX  = 0 # x offset of the current character
-    inSpace = True # we need the initial leading space
+    glint = 0
     
-    for x in range(w):
+    state = IN_SPACE
+    since_x = 0
 
-        hasInk = False
-        spaceW = 0
-        for y in range(h):
+    for x in range(img_width):
+
+        # scan all pixels in the column
+        column_has_ink = False
+        for y in range(img_height):
 
             if pred(x,y):
-                hasInk = True
+                column_has_ink = True # reaffirmed for every dark pixel in column
+                 
+                if (state==IN_SPACE):
+                    state = IN_GLYPH
+                    since_x = x
+                    glint |= convert.pixel_to_glint(0, y, img_height)
+                else:
+                    glyph_w = x - since_x
+                    glint |= convert.pixel_to_glint(glyph_w, y, img_height)
 
-                if inSpace and not spaceW:
-                    spaceW = charX
-                    charX = 0
-                
-                bitmap += 1 << (y + (charX * h))
+        if state == IN_GLYPH and (not column_has_ink):
+            # we have passed through the rightmost side of the
+            # glyph and encountered a column of whitespace.
+            yield Glyph((since_x, 0), x - since_x, glint)
+            glint = 0
 
-        if hasInk:                
-            if spaceW > space_size:
-                yield spaceW, 0 # blank bitmap (a space)
-                spaceW = 0
-            elif spaceW:
-                yield spaceW, -1 # blank bitmap (a space)
-                spaceW = 0
-        else:
-            if bitmap:
-                yield charX, bitmap
-                bitmap = 0
-                charX = 0
+            # now that we've reported on the width, we can reset the column:
+            state = IN_SPACE
+            since_x = x
 
-        inSpace = not hasInk
-        charX += 1
-
-
-    if charX:
-        if bitmap:
-            yield charX, bitmap
-        else:
-            yield charX, 0 
+    # We've reached the right edge of the image.
+    # We could still be in the middle of a glyph!
+    if state==IN_GLYPH:
+        yield Glyph((since_x, 0), x + 1 - since_x, glint)
 
 
 

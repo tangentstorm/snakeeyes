@@ -8,7 +8,7 @@ The main advantage here is that it "sort of" recognizes
 anti-aliased text.
 """
 from scrape import lines, scan_line
-import Image
+import Image, convert
 
 #:: img -> font -> int -> bool -> gen [(x, y, w, h, glyph_as_int ) ]
 def glyphs(img, font, cutoff=1, train=False):
@@ -48,7 +48,7 @@ def glyphs(img, font, cutoff=1, train=False):
                     char = font[code]
                 elif train:
                     print bmp
-                    print glint_to_strings(bmp, scanH)
+                    print convert.glint_to_strings(bmp, scanH)
                     char = raw_input("what is it?")
                     font[code]=char
                 else:
@@ -62,39 +62,6 @@ def glyphs(img, font, cutoff=1, train=False):
             x += charW
 
 
-#:: glint -> [str]
-def glint_to_strings(glint, height):
-    """
-    The only problem with this is that you have to
-    know the height of the original image, and I 
-    never recorded that in the old font files I made!
-
-    There's not much use for this anyway, except in 
-    the function above. Once Glyph works right we should
-    be able to toss glints entirely and this will go away.
-    
-    I probably won't need those old font files, and even if I do,
-    I should probably rebuild them with the new Image
-    based GUI tools.
-    """
-    lines = []
-    for x in range(height):
-        lines.append([])
-
-    count = 0
-    
-    shrink = glint
-    while shrink:
-        shrink, bit = (shrink /2), (shrink %2)
-        if bit:
-            lines[count % height].append("#")
-        else:
-            lines[count % height].append(".")
-        count += 1
-
-    # draw the baseline:
-    lines.insert(-2,'-'*len(lines[1]))
-    return "\n".join(["".join(line) for line in lines])
 
 
 
