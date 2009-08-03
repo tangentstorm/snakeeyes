@@ -107,7 +107,7 @@ class ConfigBuilder(wx.Frame):
         reload(glyph_gui)
         reload(font_gui)
         
-        wx_bmp = convert.pilToBitmap(self.glyphs[item][1])
+        wx_bmp = convert.img_to_wxbmp(self.glyphs[item][1])
         dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
                                title="current glyph in region '%s'" % item)
         dlg.ShowModal()
@@ -157,7 +157,7 @@ class ConfigBuilder(wx.Frame):
         self.paste_glyphs(onto=img)
         self.scraper.draw_boxes(img)
         
-        self.bmp.SetBitmap(convert.pilToBitmap(img))
+        self.bmp.SetBitmap(convert.img_to_wxbmp(img))
         self.Refresh()
 
     def on_tick(self, e):
@@ -168,7 +168,7 @@ class ConfigBuilder(wx.Frame):
         if not self.ticking: return
         self.ticking = False
         reload(glyph_gui)
-        wx_bmp = convert.pilToBitmap(glyph)
+        wx_bmp = convert.img_to_wxbmp(glyph)
 
         dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
                                     "train me (%s)!" % region_name)
