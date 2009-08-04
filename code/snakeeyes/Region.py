@@ -111,6 +111,20 @@ class BoxRegion(StringRegion):
     """
     pass
 
+
+class ContrastRegion(Region):
+
+    def take_snapshot(self, screen):
+        """
+        @TODO: refactor this mess.
+        """
+        snap = super(ContrastRegion, self).take_snapshot(screen)
+        self.last_snapshot = snap
+        return snap
+
+
+
+
 class StretchBoxRegion(BoxRegion):
     """
     """

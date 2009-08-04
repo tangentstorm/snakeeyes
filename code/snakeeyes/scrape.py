@@ -228,8 +228,8 @@ def getstring(w, h, fontd, pred):
 
 #:: Image.Image -> FontData -> pred -> String
 def str_from_img(img, fontd, pred):
-    # for now...
-    return "".join( fontd.recall( glyph ) 
+    # need the '' because untrained fonts return un-join-able None
+    return "".join( fontd.recall( glyph ) or ''
                     for glyph in glyphs_from_line(img, pred) )
 
 #:: char -> char -> int -> int -> FontData -> pred -> bool 

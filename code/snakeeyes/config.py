@@ -4,7 +4,7 @@ Created on Aug 1, 2009
 @author: michal
 """
 from Rectangle import Rectangle
-from Region import Region, TextRegion, BoxRegion, StretchBoxRegion
+from Region import Region, TextRegion, StretchBoxRegion, ContrastRegion
 from fontdata import FontData
 import ImageDraw
 import shelve
@@ -15,7 +15,7 @@ _KNOWN_FONTS = {}
 # config file vocabulary
 #-------------------------------------------------------
 
-from tools import Tool, NullTool, StringTool
+from tools import Tool, NullTool, StringTool, ContrastStringTool
 
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))

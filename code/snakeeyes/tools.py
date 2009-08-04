@@ -36,12 +36,45 @@ class StringTool(Tool):
     def __init__(self, font, darker_than=10):
         super(StringTool, self).__init__(font)
         self.thresh = darker_than
-    
-    def recognize(self, img):
+
+    #:: Image.Image -> (int -> int -> bool)
+    def predicate(self, img):
         if img.mode == "1":
             def pixel_check(a, b):
                 return img.getpixel((a, b)) == 0 
         else:
             def pixel_check(a, b):
                 return max(img.getpixel((a, b))) < self.thresh
-        return scrape.str_from_img(img, self.font, pixel_check)
+        return pixel_check
+    
+    def recognize(self, img):
+        return scrape.str_from_img(img, self.font, self.predicate(img))
+    
+    
+class ContrastStringTool(StringTool):
+    """
+    If the background of the origin pixel
+    is light, it looks for dark pixels, and vice versa.
+    Helpful if the text tends to have a blinking
+    inverse effect.
+
+    @TODO: assumes origin is part of background. parameterize!
+    """
+
+    def find_dark_ink(self, img, thresh=150):
+        def pred(a,b):
+            return max(img.getpixel((a, b))) < thresh
+        return pred
+
+    def find_light_ink(self, img, thresh=150):
+        def pred(a,b):
+            return max(img.getpixel((a, b))) > thresh
+        return pred
+    
+    def predicate(self, img):
+        
+        if max(img.getpixel( (0, 0) )) < 150:
+            return self.find_light_ink(img)
+        else:
+            return self.find_dark_ink(img)  
+             
