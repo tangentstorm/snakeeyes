@@ -185,3 +185,5 @@ class StretchBoxRegion(BoxRegion):
         self.last_snapshot = snap
         return snap
 
+
+    

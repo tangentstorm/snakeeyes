@@ -17,7 +17,6 @@ class GlyphDialog(wx.Dialog):
         self.bmp = wx.StaticBitmap(self, -1, wx_bmp)
 
         ok = wx.Button(self, wx.ID_OK)
-        ok.SetDefault()
         cancel = wx.Button(self, wx.ID_CANCEL)
         
         self.txt = wx.TextCtrl(self, -1)
@@ -32,6 +31,8 @@ class GlyphDialog(wx.Dialog):
         box.Add(row)
         self.SetSizerAndFit(box)
 
+
+        self.txt.SetFocus()
 
         # parent can set this to whatever they want:
         self.when_done = lambda me, res: None

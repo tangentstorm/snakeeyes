@@ -15,7 +15,7 @@ _KNOWN_FONTS = {}
 # config file vocabulary
 #-------------------------------------------------------
 
-from tools import Tool, NullTool, StringTool, ContrastStringTool
+from tools import Tool, NullTool, StringTool, ContrastStringTool, TextTool
 
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))

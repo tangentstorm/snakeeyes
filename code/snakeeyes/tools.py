@@ -77,4 +77,33 @@ class ContrastStringTool(StringTool):
             return self.find_light_ink(img)
         else:
             return self.find_dark_ink(img)  
-             
+
+
+
+class TextTool(StringTool):
+    """
+    Handles a scrolling chat box.
+    """
+    # @TODO: un-hard-code font metrics and line count!
+    def recognize(self, img):
+        lines = scrape.calc_lines(scrape.font_metrics(), 
+                                  num_lines = 6)
+        res = []
+        for (ceil, base, floor) in lines:
+            line_img = img.crop((0, ceil, img.size[0], floor + 1))
+            res.append(scrape.str_from_img(line_img, self.font, 
+                                           self.predicate(line_img)))
+        return "\n".join(res)
+
+
+
+
+
+
+
+
+
+
+
+
+
