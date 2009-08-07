@@ -5,6 +5,7 @@ import unittest
 from narrative import testcase
 from snakeeyes import scrape
 from handy import trim
+from snakeeyes.fontdata import SPACE
 
 class StringImage(object):
     """
@@ -98,6 +99,23 @@ def test_full_grid(self):
     self.assertEquals((6,   r), the_r)
 
     self.assertEquals(img.size[1], the_fo.size[1]) # heights should match!
+    
+    
+    
+@testcase
+def test_tokenize(self):
+    
+    img = grid(#01234567890123456
+               '.#.#.#..#.#.#')
+
+    found = list( scrape.glyphs_from_line(img, img.ink_p))
+
+    assert len(found) == 6    
+
+    spaced = list(scrape.spaced(found, space_width=2))
+    self.assertEquals(len(spaced), 7)
+    self.assertEquals(spaced[3], SPACE)
+    
 
 if __name__=="__main__":
     unittest.main()

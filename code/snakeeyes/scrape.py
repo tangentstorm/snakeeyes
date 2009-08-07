@@ -4,6 +4,7 @@ This contains the basic algorithms for scraping text from images.
 from Glyph import Glyph
 import convert
 import Image
+from fontdata import SPACE
 
 
 def count_black_pixels_on_row(img, y):
@@ -226,11 +227,29 @@ def getstring(w, h, fontd, pred):
 
 
 
+
+def spaced(glyphs, space_width=3):
+    """
+    Combine glyphs into word-forms.
+    """
+    clean = [g for g in glyphs if g is not None]
+    if not clean: return []
+    prev = clean[0]
+    res = [prev]
+    for glyph in clean[1:]:
+        prev_x2 = prev.pos[0] + prev.size[0]
+        if glyph.pos[0] - prev_x2 >= space_width:
+            res.append(SPACE)
+        res.append(glyph)
+        prev = glyph
+    return res
+
+
 #:: Image.Image -> FontData -> pred -> String
 def str_from_img(img, fontd, pred):
-    # need the '' because untrained fonts return un-join-able None
+    # untrained fonts return un-join-able None
     return "".join( fontd.recall( glyph ) or ''
-                    for glyph in glyphs_from_line(img, pred) )
+                    for glyph in spaced(glyphs_from_line(img, pred)))
 
 #:: char -> char -> int -> int -> FontData -> pred -> bool 
 def getBoundedString(start, end, width, height, fontd, pred, train=True):

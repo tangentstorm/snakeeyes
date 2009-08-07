@@ -54,6 +54,7 @@ class ConfigBuilder(wx.Frame):
         vars.update(self.__dict__)
         self.shell = Shell(self, locals = vars,
                            introText = "SnakeEyes v0.0a\n")
+        self.shell.AppendText("REF: ''.join(sorted(self.scraper['chat_box'].tool.font.data.values()))")
 
         self.refresh = wx.Button(self, wx.NewId(), "refresh")
         self.refresh.Bind(wx.EVT_BUTTON, self.on_refresh_button)

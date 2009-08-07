@@ -52,7 +52,7 @@ class OCRTest(unittest.TestCase):
         glyph = "a"
         self.put_text(glyph)
 
-        #found = list(scrape.glyphs(self.img))
+        #found = list(scrape.str_from_img(self.img))
         #assert len(found) == 1, found
                 
         #self._show()        

@@ -1,6 +1,7 @@
 import os
 import shelve
 
+SPACE = object()
 
 class NeedTraining(Exception):
     """
@@ -36,6 +37,8 @@ class FontData(object):
     #:: self -> Glyph -> Maybe String
     def recall(self, glyph):
         "retrieves a character"
+        if glyph is SPACE:
+            return ' '
         try:
             return self.data[glyph.tostring()]
         except KeyError:

@@ -68,9 +68,9 @@ if __name__ == "__main__":
         print "making new window for", win.text
         import builder; reload(builder)
         win.bringToFront()
-        path = 'c:/svn/poker/assets/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
+        path = 'c:/svn/poker/assets/scrapecfg/pokerstars/classic/'
         os.chdir(path)
-        builder.ConfigBuilder(path, win, SELECTOR).Show()
+        builder.ConfigBuilder('5cd_792x546.scrape', win, SELECTOR).Show()
     
     app = wx.App(redirect=False)
     
