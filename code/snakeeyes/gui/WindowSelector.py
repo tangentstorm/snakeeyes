@@ -3,7 +3,7 @@ Created on Jul 31, 2009
 
 @author: michal
 """
-import wx
+import wx, os
 import windows
 
 class WindowSelector(wx.Frame):
@@ -66,10 +66,10 @@ if __name__ == "__main__":
         "replace this with whatever you want."
         
         print "making new window for", win.text
-        import builder
-        reload(builder)
+        import builder; reload(builder)
         win.bringToFront()
-        path = 'w:/app/poker/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
+        path = 'c:/svn/poker/assets/scrapecfg/pokerstars/classic/5cd_792x546.scrape'
+        os.chdir(path)
         builder.ConfigBuilder(path, win, SELECTOR).Show()
     
     app = wx.App(redirect=False)
