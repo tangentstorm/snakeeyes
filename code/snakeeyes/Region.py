@@ -11,6 +11,8 @@ import ImageChops
 import ImageDraw
 import ImageColor
 import scrape
+import sys
+import difflib
 
 class Region(object):
     """
@@ -98,6 +100,30 @@ class TextRegion(StringRegion):
         # img_out = img_out.resize((w *2 , h* 2))
 
         return img_out
+    
+class ChatRegion(TextRegion):
+    """
+    This is a text region that scrolls. 
+    The call back is called for every new line of
+    text that appears.
+    """
+    def __init__(self, pos, size, tool=None, color=None, callback=None):
+        super(ChatRegion, self).__init__(pos, size, tool, color)
+        self.previous_text = ""
+        self.callback = callback or (lambda lines: sys.stdout.write("\n".join(lines) + "\n"))
+
+    def scrape(self, screen):
+        text = super(ChatRegion, self).scrape(screen).split("\n")
+        if text != self.previous_text:
+            newlines = []
+            for diff in difflib.ndiff(self.previous_text, text):
+                if diff.startswith("+"):
+                    newlines.append(diff[1:])
+            self.callback(newlines)
+            self.previous_text = text
+        return "\n".join(text)
+    
+    
 
 class BoxRegion(StringRegion):
     """
@@ -106,8 +132,8 @@ class BoxRegion(StringRegion):
     be able to determine until we scrape (perhaps
     because the box is flashing).
     
-    we subclas text region so it auto-converts to 
-    black and white for us
+    We subclass StringRegion so it auto-converts to 
+    black and white for us.
     """
     pass
 
