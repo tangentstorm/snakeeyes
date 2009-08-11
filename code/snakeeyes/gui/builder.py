@@ -9,7 +9,7 @@ from wx.py.shell import Shell
 import wx.lib.mixins.listctrl  as  listmix
 import ImageDraw
 import ImageOps
-import convert
+from snakeeyes import convert
 import snakeeyes
 import snakeeyes.gui.glyphs as glyph_gui
 import snakeeyes.gui.fonts as font_gui
@@ -117,7 +117,7 @@ class ConfigBuilder(wx.Frame):
     def on_refresh_button(self, e):
         self.live_coding_hook()
         #self.reload_modules()
-        #self.make_scraper()
+        self.make_scraper()
         
     def reload_modules(self):
         reload(snakeeyes.config)
@@ -128,7 +128,7 @@ class ConfigBuilder(wx.Frame):
 
     def live_coding_hook(self):
         # this is a little livecoding thing:
-        exec open("c:/temp/textregion.py").read() in locals()
+        pass #exec open("c:/temp/textregion.py").read() in locals()
     
     def make_scraper(self):
         self.scraper = snakeeyes.load_config(self.scrapefile)

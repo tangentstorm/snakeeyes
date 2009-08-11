@@ -4,7 +4,7 @@ Created on Aug 1, 2009
 @author: michal
 """
 import wx
-import convert
+from snakeeyes import convert
 
 class GlyphDialog(wx.Dialog):
     """

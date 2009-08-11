@@ -4,7 +4,7 @@ Created on Aug 1, 2009
 @author: michal
 """
 from Rectangle import Rectangle
-from Region import Region, TextRegion, StretchBoxRegion, ContrastRegion
+from Region import Region, TextRegion, StretchBoxRegion, ContrastRegion, ChatRegion
 from fontdata import FontData
 import ImageDraw
 import shelve

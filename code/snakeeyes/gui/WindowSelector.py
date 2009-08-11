@@ -4,7 +4,7 @@ Created on Jul 31, 2009
 @author: michal
 """
 import wx, os
-import windows
+from snakeeyes import windows
 
 class WindowSelector(wx.Frame):
     """
@@ -25,7 +25,7 @@ class WindowSelector(wx.Frame):
         
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(self.filterText)
-        box.Add(self.tree)
+        box.Add(self.tree, 1, wx.EXPAND)
         self.SetSizerAndFit(box)
         
         self.callback = callback
