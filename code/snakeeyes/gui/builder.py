@@ -10,6 +10,7 @@ import wx.lib.mixins.listctrl  as  listmix
 import ImageDraw
 import ImageOps
 from snakeeyes import convert
+from snakeeyes.fontdata import NeedTraining
 import snakeeyes
 import snakeeyes.gui.glyphs as glyph_gui
 import snakeeyes.gui.fonts as font_gui
@@ -72,6 +73,8 @@ class ConfigBuilder(wx.Frame):
         # this is just so the mono image stands out
         self.SetBackgroundColour(wx.Color(0x33, 0x33, 0x99))
         self.SetForegroundColour(wx.Color(0xFF, 0xFF, 0xFF))
+        
+        self.values = {}
 
         self.layout()
         self.Show()
@@ -108,7 +111,7 @@ class ConfigBuilder(wx.Frame):
         reload(glyph_gui)
         reload(font_gui)
         
-        wx_bmp = convert.img_to_wxbmp(self.glyphs[item][1])
+        wx_bmp = convert.img_to_wxbmp(self.scraper[item].last_snapshot)
         dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
                                title="current glyph in region '%s'" % item)
         dlg.ShowModal()
@@ -132,51 +135,48 @@ class ConfigBuilder(wx.Frame):
     
     def make_scraper(self):
         self.scraper = snakeeyes.load_config(self.scrapefile)
-                
-    def collect_glyphs(self, img):
-        ":: Image.Image -> { str : ( Region, Image.Image) }"
-        # we've assumed you've grabbed the entire window
-        # maybe it would be better to grab only the pieces
-        # you need directly from the screen, but for 
-        # now this is fine
-        res = {}
-        for key, region in self.scraper.items():
-            try:
-                region.scrape(img) # -> region.last_value
-                res[key] = region, region.last_snapshot
-            except snakeeyes.fontdata.NeedTraining, e:
-                self.request_training(e.font, e.glyph, key)
-                break
-        return res
             
-    def paste_glyphs(self, onto):
-        for key, (region, glyph) in self.glyphs.items():
-            onto.paste(glyph, region.rect.pos)
+                
+    def collect_values(self, img):
+        try:
+            self.scraper.collect_values()
+        except snakeeyes.fontdata.NeedTraining, e:
+            self.request_training(e.font, e.glyph, e.font)
+
+            
+    def paste_snaps(self, onto):
+        for key, region in self.scraper.items():
+            onto.paste(region.last_snapshot, region.rect.pos)
+            
             
     def update_image(self):
         self.screen = self.win.as_image()
-        self.glyphs = self.collect_glyphs(self.screen)
+        self.values = self.scraper.collect_values(self.screen)
         
         img = ImageOps.grayscale(self.screen).convert("RGB")
-        self.paste_glyphs(onto=img)
+        self.paste_snaps(onto=img)
         self.scraper.draw_boxes(img)
         
         self.bmp.SetBitmap(convert.img_to_wxbmp(img))
         self.Refresh()
 
+
     def on_tick(self, e):
         if self.ticking:
-            self.update_image()
-            self.live_data.repopulate()
+            try:
+                self.update_image()
+                self.live_data.repopulate()
+            except NeedTraining, e:
+                self.request_training(e.font, e.glyph)
 
-    def request_training(self, font, glyph, region_name):
+    def request_training(self, font, glyph):
         if not self.ticking: return
         self.ticking = False
         reload(glyph_gui)
         wx_bmp = convert.img_to_wxbmp(glyph)
 
         dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
-                                    "train me (%s)!" % region_name)
+                                    "train me!")
         dlg.when_done = self.training_done
         dlg.font = font
         dlg.glyph = glyph

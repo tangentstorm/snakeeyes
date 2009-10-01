@@ -103,7 +103,7 @@ def where(condition):
 
 
 def named(txt):
-    return where(lambda win: win.text.count(txt))[0]
+    return where(lambda win: win.text.count(txt))
 
 
 def grab_pixel(hwnd, (x, y)):

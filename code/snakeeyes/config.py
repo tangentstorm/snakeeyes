@@ -71,3 +71,13 @@ class ScrapeConfig(dict):
             draw.rectangle([r.pos, r.far_corner()], outline=region.color)        
 
 
+    def collect_values(self, img):
+        ":: Image.Image -> { str : str }"
+        # we've assumed you've grabbed the entire window
+        # maybe it would be better to grab only the pieces
+        # you need directly from the screen, but for 
+        # now this is fine
+        res = {}
+        for key, region in self.items():
+            res[key] = region.scrape(img)
+        return res

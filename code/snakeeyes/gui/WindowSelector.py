@@ -70,7 +70,8 @@ if __name__ == "__main__":
         win.bringToFront()
         path = 'c:/svn/poker/assets/scrapecfg/pokerstars/classic/'
         os.chdir(path)
-        builder.ConfigBuilder('5cd_792x546.scrape', win, SELECTOR).Show()
+        builder.ConfigBuilder('holdem_792x546_headsup.scrape', 
+                              win, SELECTOR).Show()
     
     app = wx.App(redirect=False)
     

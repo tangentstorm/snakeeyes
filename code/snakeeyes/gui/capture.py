@@ -10,7 +10,8 @@ take a picture.
 """
 
 from wx.py.shell import ShellFrame
-import scrape, windows
+from WindowSelector import WindowSelector
+from snakeeyes import windows
 import math, os, time, math, wx
 import win32gui
 
@@ -42,7 +43,6 @@ class CaptureFrame(wx.Frame):
             'self':self,
             'wx': wx,
             'hwnd': hwnd,
-            'scrape':scrape,
             }
         self.shellFrame = ShellFrame(None, -1, "pyshell", locals=self.locals)
         self.locals['shell'] = self.shellFrame.shell
@@ -106,9 +106,14 @@ class CaptureFrame(wx.Frame):
 
 
 if __name__=='__main__':
-    hwnd = ''
+
+    def make_capture(win):
+        hwnd = str(win.hwnd)
+        frame = CaptureFrame(hwnd, None, -1, "capture")
+        frame.Show()
+
     app = wx.App(redirect=False)
-    frame = CaptureFrame(hwnd, None, -1, "capture")
-    frame.Show()
+    sel = WindowSelector(make_capture)
+    sel.Show()
     app.MainLoop()
 
