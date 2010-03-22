@@ -3,11 +3,8 @@ Created on Aug 1, 2009
 
 @author: michal
 '''
-from handy import spawn_thread
-from pprint import pformat
 from wx.py.shell import Shell
 import wx.lib.mixins.listctrl  as  listmix
-import ImageDraw
 import ImageOps
 from snakeeyes import convert
 from snakeeyes.fontdata import NeedTraining
@@ -145,7 +142,7 @@ class ConfigBuilder(wx.Frame):
 
             
     def paste_snaps(self, onto):
-        for key, region in self.scraper.items():
+        for region in self.scraper.values():
             onto.paste(region.last_snapshot, region.rect.pos)
             
             

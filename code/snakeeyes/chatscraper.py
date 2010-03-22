@@ -10,7 +10,7 @@ from fontdata import FontData
  
 def getText(image):
     chatfont = FontData("w:/app/poker/ps-chat.fontd")
-    for top,base,bottom in scrape.lines(image):
+    for top,base,bottom in scrape.guess_lines(image):
         
         def hasInk(a,b):
             return image.getpixel((a,b+top+1)) == 0

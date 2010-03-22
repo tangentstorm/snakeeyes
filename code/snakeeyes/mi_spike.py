@@ -7,7 +7,7 @@ think Joe was actually having some problem at the time.)
 The main advantage here is that it "sort of" recognizes
 anti-aliased text.
 """
-from scrape import lines, scan_line
+from scrape import guess_lines, scan_line
 import Image, convert
 
 #:: img -> font -> int -> bool -> gen [(x, y, w, h, glyph_as_int ) ]
@@ -25,7 +25,7 @@ def glyphs(img, font, cutoff=1, train=False):
     compensate for ligatures/kerning. This doesn't really
     work too well yet.
     """
-    for top, baseLine, bottom in lines(img.convert('1')):
+    for top, baseLine, bottom in guess_lines(img.convert('1')):
 
         scanH = top-bottom #16 #top-bottom
         fakeTop = top #baseLine - 14

@@ -5,7 +5,7 @@ Created on Jul 31, 2009
 """
 import win32gui, win32ui
 import ImageGrab
-from win32gui import GetWindowRect, GetClientRect, ClientToScreen
+from win32gui import GetWindowRect, GetClientRect, ClientToScreen, MoveWindow
 
 class Window(object):
     """
@@ -55,8 +55,7 @@ class Window(object):
     def position(self):
         x, y, x2, y2 = GetWindowRect(self.hwnd)
         return (x, y)
-    
-    
+
     def as_image(self):
         return ImageGrab.grab(self.bounds)
 
@@ -64,7 +63,14 @@ class Window(object):
         win32gui.SetForegroundWindow(self.hwnd)
         
     def move_to(self, x, y):
-        win32gui.MoveWindow(self.hwnd, 0, 0, self.width, self.height, True)
+        MoveWindow(self.hwnd, x, y, self.width, self.height, True)
+
+    def resizeClient(self, w, h):
+        cx1,cy1,cx2,cy2 = GetClientRect(self.hwnd)
+        wx1,wy1,wx2,wy2 = GetWindowRect(self.hwnd)
+        dx = (wx2 - wx1) - cx2
+        dy = (wy2 - wy1) - cy2
+        MoveWindow(self.hwnd, wx1, wy1, w+dx, h+dy, True);
 
     def grab_pixel(self, x, y):
         " x,y -> (r,g,b) "

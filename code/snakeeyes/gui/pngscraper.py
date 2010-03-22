@@ -235,7 +235,7 @@ class PngScraperFrame(wx.Frame):
 
         y = 0
         w, h = img_out.size
-        for (top, base, bottom) in scrape.lines(img_out):
+        for (top, base, bottom) in scrape.guess_lines(img_out):
 
             # draw the baseline
             dc.SetPen(wx.Pen(baseline_color))
