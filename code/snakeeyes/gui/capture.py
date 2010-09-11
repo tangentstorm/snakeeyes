@@ -2,10 +2,9 @@
 This app lets you collect snapshots of a window for
 processing later.
 
-Enter an hwnd in the text box and click the button to
-take a picture.
+Select a window from the list, and then click the button
+to take a picture.
 
-@TODO: tie this in with WindowSelector!
 @TODO: move output directory config into the GUI
 """
 

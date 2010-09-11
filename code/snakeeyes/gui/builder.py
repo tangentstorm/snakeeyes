@@ -1,8 +1,10 @@
-'''
+"""
 Created on Aug 1, 2009
 
+To see this, run WindowSelector.py
+
 @author: michal
-'''
+"""
 from wx.py.shell import Shell
 import wx.lib.mixins.listctrl  as  listmix
 import ImageOps
@@ -38,6 +40,10 @@ class ConfigBuilder(wx.Frame):
     Interactively build a scraping profile.
     """
     def __init__(self, scrapefile, win, parent=None, *a, **kw):
+        """
+        @param scrapefile the config file to use
+        @param win the window object (may be none)
+        """
         super(ConfigBuilder, self).__init__(parent, *a, **kw) 
         
         
@@ -46,7 +52,8 @@ class ConfigBuilder(wx.Frame):
         self.win = win
         self.scrapefile = scrapefile
 
-        self.bmp = wx.StaticBitmap(self, size=(win.size))
+        self.bmp = wx.StaticBitmap(self,
+           size=(win.size if win else (792,546))) #@TODO: parameterize
         
         vars = { 'self': self }
         vars.update(self.__dict__)
@@ -62,10 +69,13 @@ class ConfigBuilder(wx.Frame):
         self.live_data.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item)
         
 
-        self.timer = wx.Timer()
-        self.timer.Bind(wx.EVT_TIMER, self.on_tick)
-        self.ticking = True
-        self.timer.Start(500, wx.TIMER_CONTINUOUS)
+        if self.win is None:
+            self.ticking = False
+        else:
+            self.timer = wx.Timer()
+            self.timer.Bind(wx.EVT_TIMER, self.on_tick)
+            self.ticking = True
+            self.timer.Start(500, wx.TIMER_CONTINUOUS)
         
         # this is just so the mono image stands out
         self.SetBackgroundColour(wx.Color(0x33, 0x33, 0x99))
@@ -87,7 +97,8 @@ class ConfigBuilder(wx.Frame):
         row.Add(self.refresh)
         row.AddSpacer(20)
         row.Add(wx.StaticText(self, -1, "hwnd:"))
-        row.Add(wx.TextCtrl(self, -1, str(self.win.hwnd)))
+        if self.win is not None:
+            row.Add(wx.TextCtrl(self, -1, str(self.win.hwnd)))
         box.Add(row)
 
         # image itself        
@@ -118,6 +129,7 @@ class ConfigBuilder(wx.Frame):
         self.live_coding_hook()
         #self.reload_modules()
         self.make_scraper()
+        self.set_image(self.screen)
         
     def reload_modules(self):
         reload(snakeeyes.config)
@@ -136,7 +148,7 @@ class ConfigBuilder(wx.Frame):
                 
     def collect_values(self, img):
         try:
-            self.scraper.collect_values()
+            self.scraper.collect_values(img)
         except snakeeyes.fontdata.NeedTraining, e:
             self.request_training(e.font, e.glyph, e.font)
 
@@ -147,24 +159,36 @@ class ConfigBuilder(wx.Frame):
             
             
     def update_image(self):
-        self.screen = self.win.as_image()
-        self.values = self.scraper.collect_values(self.screen)
+        """
+        this captures the new image from the window.
+        """
+        self.set_image(self.win.as_image())
         
+        
+    def set_image(self, image):
+        """
+        this takes any image as a parameter
+        """
+        self.screen = image
         img = ImageOps.grayscale(self.screen).convert("RGB")
-        self.paste_snaps(onto=img)
-        self.scraper.draw_boxes(img)
         
+        try:
+            self.values = self.scraper.collect_values(self.screen)
+        except NeedTraining, e:
+            self.request_training(e.font, e.glyph)
+        else:        
+            self.paste_snaps(onto=img)
+
+        self.live_data.repopulate()
+        self.scraper.draw_boxes(img)            
         self.bmp.SetBitmap(convert.img_to_wxbmp(img))
+
         self.Refresh()
 
 
     def on_tick(self, e):
         if self.ticking:
-            try:
-                self.update_image()
-                self.live_data.repopulate()
-            except NeedTraining, e:
-                self.request_training(e.font, e.glyph)
+            self.update_image()
 
     def request_training(self, font, glyph):
         if not self.ticking: return

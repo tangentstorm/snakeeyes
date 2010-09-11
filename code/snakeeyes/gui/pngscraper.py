@@ -6,10 +6,11 @@ import wx.py as py
 import Image
 sys.path.insert(0, 'w:/app/ceomatic')
 from cursor import Cursor, ListView
-import scrape
+from snakeeyes import scrape
 
 #PNGDIR=r'W:\app\poker\hwnd6359358' # full tilt
 PNGDIR=r'W:\app\poker\hwnd527812' # pokerstars
+PNGDIR=r"C:\tmphwnd10356946"
 
 ID_OPEN_FILE = wx.NewId()
 ID_OPEN_DIR = wx.NewId()
