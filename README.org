@@ -1,0 +1,30 @@
+* snakeeyes
+/a real-time screen-scraping and primitive ocr toolkit/
+
+** programs:
+- =chatscraper.py= : monitor and dump on-screen, scrolling text windows
+- =gui/capture.py= : filter and select windows by title, then click button to take screenshots
+- =gui/fonts.py= : browse collected font images
+- =gui/pngscraper.py= : python shell + image browser
+- =gui/WindowSelector= : select and scrape a currently open window
+
+** modules:
+- =config.py= : vocabulary for config file setup
+- =convert.py= :  misc conversion routines
+- =fontdata.py= : class that maps images to characters
+- =Glyph.py= : represents a glyph on-screen
+- =mi_spike= : helpers for anti-aliased fonts
+- =Rectangle.py= : basic rectangle class
+- =Region.py= : classes for processing fixed regions of the screen
+- =scrape.py= : algorithms for scraping text from images
+- =tools.py= : various recognier tools that you can hook to a region
+- =windows.py= : a wrapper around the win32 api for finding windows
+- =gui/builder.py= : class for building scrape config files
+
+** other files
+- =test.sh= : simple / dumb test runner
+- =tests/= : the actual tests. lots of commentary.
+
+** vocabulary:
+- glint :: glyph integer. basically a bitmap packed into an int
+- glyph :: an image to recognize (usually  single character)
