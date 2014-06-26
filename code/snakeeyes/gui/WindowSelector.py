@@ -3,7 +3,7 @@ Created on Jul 31, 2009
 
 @author: michal
 """
-import wx, os
+import wx
 from snakeeyes import windows
 
 class WindowSelector(wx.Frame):
@@ -11,9 +11,16 @@ class WindowSelector(wx.Frame):
     Allows you to select an open window for whatever
     nefarious purpose you can imagine (but probably 
     for screen scraping).
+
+    Invokes `callback(win)`, where `win` is a
+    `snakeeyes.windows.Window` instance.
     """
 
     def __init__(self, callback):
+        """
+        @param callback: snakeeyes.windows.Window -> ()
+        @return:
+        """
         super(WindowSelector, self).__init__(None, -1, "select window")
         self.filterText = wx.TextCtrl(self, -1, "5-Card")
         self.Bind(wx.EVT_TEXT, self.on_text_change, self.filterText)
@@ -57,24 +64,3 @@ class WindowSelector(wx.Frame):
     def on_activate(self, e):
         self.callback(self.tree.GetPyData(e.GetItem()))
     
-    
-if __name__ == "__main__":
-    
-    SELECTOR = None
-    
-    def make_builder(win):
-        "replace this with whatever you want."
-        
-        print "making new window for", win.text
-        import builder; reload(builder)
-        win.bringToFront()
-        path = 'c:/svn/poker/assets/scrapecfg/pokerstars/classic/'
-        os.chdir(path)
-        builder.ConfigBuilder('holdem_792x546_headsup.scrape', 
-                              win, SELECTOR).Show()
-    
-    app = wx.App(redirect=False)
-    
-    SELECTOR = WindowSelector(make_builder)
-    SELECTOR.Show()
-    app.MainLoop()   

@@ -3,8 +3,6 @@ Created on Aug 1, 2009
 
 @author: michal
 """
-from Rectangle import Rectangle
-from Region import Region, TextRegion, StretchBoxRegion, ContrastRegion, ChatRegion
 from fontdata import FontData
 import ImageDraw
 import shelve
@@ -15,6 +13,9 @@ _KNOWN_FONTS = {}
 # config file vocabulary
 #-------------------------------------------------------
 
+# some of these are not used in this file, but they
+# should be in scope for use by the config files themselves:
+from Region import *
 from tools import Tool, NullTool, StringTool, ContrastStringTool, TextTool
 
 def get_font(path):
@@ -72,7 +73,7 @@ class ScrapeConfig(dict):
 
 
     def collect_values(self, img):
-        ":: Image.Image -> { str : str }"
+        """:: Image.Image -> { str : str }"""
         # we've assumed you've grabbed the entire window
         # maybe it would be better to grab only the pieces
         # you need directly from the screen, but for 

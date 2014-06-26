@@ -1,19 +1,24 @@
 """
 Created on Aug 1, 2009
 
-To see this, run WindowSelector.py
+App to help you build scraping profiles interactively.
 
 @author: michal
 """
+import os, sys
+
+import wx
 from wx.py.shell import Shell
 import wx.lib.mixins.listctrl  as  listmix
 import ImageOps
+
 from snakeeyes import convert
 from snakeeyes.fontdata import NeedTraining
 import snakeeyes
 import snakeeyes.gui.glyphs as glyph_gui
 import snakeeyes.gui.fonts as font_gui
-import wx, sys
+from WindowSelector import WindowSelector
+from snakeeyes.tools import * # for use in the configs
 
 class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """
@@ -22,13 +27,13 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def __init__(self, scraper, *a, **kw):
         wx.ListCtrl.__init__(self, style=wx.LC_REPORT, *a, **kw)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-        
+
         self.InsertColumn(0, "name")
         self.InsertColumn(1, "value")
 
         self.scraper = scraper
         self.repopulate()
-        
+
     def repopulate(self):
         self.DeleteAllItems()
         for name, region in sorted(self.scraper.items()):
@@ -44,17 +49,17 @@ class ConfigBuilder(wx.Frame):
         @param scrapefile the config file to use
         @param win the window object (may be none)
         """
-        super(ConfigBuilder, self).__init__(parent, *a, **kw) 
-        
-        
+        super(ConfigBuilder, self).__init__(parent, *a, **kw)
+
+
         self.SetTitle("profile builder: %s" % scrapefile)
-        
+
         self.win = win
         self.scrapefile = scrapefile
 
         self.bmp = wx.StaticBitmap(self,
            size=(win.size if win else (792,546))) #@TODO: parameterize
-        
+
         vars = { 'self': self }
         vars.update(self.__dict__)
         self.shell = Shell(self, locals = vars,
@@ -63,11 +68,11 @@ class ConfigBuilder(wx.Frame):
 
         self.refresh = wx.Button(self, wx.NewId(), "refresh")
         self.refresh.Bind(wx.EVT_BUTTON, self.on_refresh_button)
-        
+
         self.make_scraper()
         self.live_data = ScrapeDataCtrl(self.scraper, self)
         self.live_data.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item)
-        
+
 
         if self.win is None:
             self.ticking = False
@@ -76,11 +81,11 @@ class ConfigBuilder(wx.Frame):
             self.timer.Bind(wx.EVT_TIMER, self.on_tick)
             self.ticking = True
             self.timer.Start(500, wx.TIMER_CONTINUOUS)
-        
+
         # this is just so the mono image stands out
-        self.SetBackgroundColour(wx.Color(0x33, 0x33, 0x99))
-        self.SetForegroundColour(wx.Color(0xFF, 0xFF, 0xFF))
-        
+        self.SetBackgroundColour(wx.Colour(0x33, 0x33, 0x99))
+        self.SetForegroundColour(wx.Colour(0xFF, 0xFF, 0xFF))
+
         self.values = {}
 
         self.layout()
@@ -88,7 +93,7 @@ class ConfigBuilder(wx.Frame):
 
 
     def layout(self):
-        "Arranges the controls inside the window."
+        """Arranges the controls inside the window."""
         box = wx.BoxSizer(wx.VERTICAL)
 
         # top row
@@ -101,7 +106,7 @@ class ConfigBuilder(wx.Frame):
             row.Add(wx.TextCtrl(self, -1, str(self.win.hwnd)))
         box.Add(row)
 
-        # image itself        
+        # image itself
         row = wx.BoxSizer(wx.HORIZONTAL)
         row.Add(self.bmp, 0, wx.EXPAND)
         self.live_data.SetSizeHints(200, -1)
@@ -118,19 +123,19 @@ class ConfigBuilder(wx.Frame):
 
         reload(glyph_gui)
         reload(font_gui)
-        
+
         wx_bmp = convert.img_to_wxbmp(self.scraper[item].last_snapshot)
-        dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
+        dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1,
                                title="current glyph in region '%s'" % item)
         dlg.ShowModal()
-        
+
 
     def on_refresh_button(self, e):
         self.live_coding_hook()
         #self.reload_modules()
         self.make_scraper()
         self.set_image(self.screen)
-        
+
     def reload_modules(self):
         reload(snakeeyes.config)
         reload(snakeeyes.Region)
@@ -141,46 +146,46 @@ class ConfigBuilder(wx.Frame):
     def live_coding_hook(self):
         # this is a little livecoding thing:
         pass #exec open("c:/temp/textregion.py").read() in locals()
-    
+
     def make_scraper(self):
         self.scraper = snakeeyes.load_config(self.scrapefile)
-            
-                
+
+
     def collect_values(self, img):
         try:
             self.scraper.collect_values(img)
         except snakeeyes.fontdata.NeedTraining, e:
             self.request_training(e.font, e.glyph, e.font)
 
-            
+
     def paste_snaps(self, onto):
         for region in self.scraper.values():
             onto.paste(region.last_snapshot, region.rect.pos)
-            
-            
+
+
     def update_image(self):
         """
         this captures the new image from the window.
         """
         self.set_image(self.win.as_image())
-        
-        
+
+
     def set_image(self, image):
         """
         this takes any image as a parameter
         """
         self.screen = image
         img = ImageOps.grayscale(self.screen).convert("RGB")
-        
+
         try:
             self.values = self.scraper.collect_values(self.screen)
         except NeedTraining, e:
             self.request_training(e.font, e.glyph)
-        else:        
+        else:
             self.paste_snaps(onto=img)
 
         self.live_data.repopulate()
-        self.scraper.draw_boxes(img)            
+        self.scraper.draw_boxes(img)
         self.bmp.SetBitmap(convert.img_to_wxbmp(img))
 
         self.Refresh()
@@ -196,7 +201,7 @@ class ConfigBuilder(wx.Frame):
         reload(glyph_gui)
         wx_bmp = convert.img_to_wxbmp(glyph)
 
-        dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1, 
+        dlg = glyph_gui.GlyphDialog(wx_bmp, self, -1,
                                     "train me!")
         dlg.when_done = self.training_done
         dlg.font = font
@@ -209,7 +214,34 @@ class ConfigBuilder(wx.Frame):
             print "OK! learning new value!", dlg.txt.GetValue()
             dlg.font.learn(dlg.glyph, dlg.txt.GetValue())
         self.ticking = True
-        
-        
+
+
+
+if __name__ == "__main__":
+
+    SELECTOR = None
+
+    def make_builder(win):
+        """
+        replace this with whatever you want.
+
+        @param win: snakeeyes.windows.Window
+        """
+        print "making new window for", win.text
+
+        # this next line is for
+        import builder; reload(builder)
+
+        win.bringToFront()
+        path = 'c:/ver/poker/assets/scrapecfg/pokerstars/classic/'
+        os.chdir(path)
+        builder.ConfigBuilder('holdem_792x546_headsup.scrape',
+                              win, SELECTOR).Show()
+
+    app = wx.App(redirect=False)
+
+    SELECTOR = WindowSelector(make_builder)
+    SELECTOR.Show()
+    app.MainLoop()
 
 
