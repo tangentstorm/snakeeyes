@@ -4,8 +4,9 @@ Created on Jul 31, 2009
 @author: michal
 """
 import win32gui, win32ui
-import ImageGrab
+import Image, ImageGrab
 from win32gui import GetWindowRect, GetClientRect, ClientToScreen, MoveWindow
+from ctypes import windll
 
 class Window(object):
     """
@@ -56,8 +57,55 @@ class Window(object):
         x, y, x2, y2 = GetWindowRect(self.hwnd)
         return tuple([x, y])
 
-    def as_image(self):
+    def as_image_simple(self):
+        """
+        This uses ImageGrab to return a screenshot, but it only works
+        when the image is visible onscreen.
+        @return: Image.Image
+        """
         return ImageGrab.grab(self.bounds)
+
+    def _makeDC(self):
+        """Creates a Win32 drawing context"""
+        # this would be a property except we have to manually manage
+        # the garbage collection on this thing.
+        # this is used by as_image
+        self.hwndDC = win32gui.GetWindowDC(self.hwnd)
+        return win32ui.CreateDCFromHandle(self.hwndDC)
+
+    def as_image(self):
+        """
+        This returns a screenshot of the window, and should work even
+        when the window is not visible on the screen, i.e., positioned
+        offscreen, or obscured by another window.
+
+        (Does not appear to work for minimized windows, though -
+        it just returns a blank image.)
+
+        @return: Image.Image
+        """
+        # technique taken from:
+        # http://stackoverflow.com/questions/19695214
+        selfDC = self._makeDC()
+        saveDC = selfDC.CreateCompatibleDC()
+        saveBmp = win32ui.CreateBitmap()
+        saveBmp.CreateCompatibleBitmap(selfDC, self.width, self.height)
+        saveDC.SelectObject(saveBmp)
+
+        # 0=whole window, 1=client area
+        windll.user32.PrintWindow(self.hwnd, saveDC.GetSafeHdc(), 1)
+
+        bmpInfo = saveBmp.GetInfo()
+        bmpBits = saveBmp.GetBitmapBits(True)
+        img = Image.frombuffer('RGB',
+            (bmpInfo['bmWidth'], bmpInfo['bmHeight']),
+            bmpBits, 'raw', 'BGRX', 0, 1)
+
+        win32gui.DeleteObject(saveBmp.GetHandle())
+        saveDC.DeleteDC()
+        selfDC.DeleteDC()
+        win32gui.ReleaseDC(self.hwnd, self.hwndDC)
+        return img
 
     def bringToFront(self):
         win32gui.SetForegroundWindow(self.hwnd)
