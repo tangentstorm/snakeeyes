@@ -1,8 +1,8 @@
-'''
+"""
 Created on Aug 2, 2009
 
 @author: michal
-'''
+"""
 import scrape
 
 class Tool(object):
@@ -58,7 +58,7 @@ class ContrastStringTool(StringTool):
     Helpful if the text tends to have a blinking
     inverse effect.
 
-    @TODO: assumes origin is part of background. parameterize!
+    @TODO: assumes origin is part of background. parametrize!
     """
 
     def find_dark_ink(self, img, thresh=150):

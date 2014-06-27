@@ -1,8 +1,8 @@
-'''
+"""
 Created on Aug 2, 2009
 
 @author: michal
-'''
+"""
 import unittest
 
 

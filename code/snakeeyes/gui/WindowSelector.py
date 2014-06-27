@@ -22,7 +22,7 @@ class WindowSelector(wx.Frame):
         @return:
         """
         super(WindowSelector, self).__init__(None, -1, "select window")
-        self.filterText = wx.TextCtrl(self, -1, "5-Card")
+        self.filterText = wx.TextCtrl(self, -1, "Logged in as")
         self.Bind(wx.EVT_TEXT, self.on_text_change, self.filterText)
 
         self.tree = wx.TreeCtrl(self, size=(200,300),

@@ -1,8 +1,8 @@
-'''
+"""
 Created on Aug 1, 2009
 
 @author: michal
-'''
+"""
 import sys; sys.path.append("..") # for testloop.sh
 import unittest
 

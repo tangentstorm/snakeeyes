@@ -19,22 +19,22 @@ class StringImage(object):
         
     @property
     def size(self):
-        return (self.width, self.height)
+        return tuple([self.width, self.height])
 
     def ink_p(self, x, y):
-        ":: x -> y -> boolean"
+        """:: x -> y -> boolean"""
         return self.lines[y][x] == "#"
 
 
 def grid(string):
-    "short constructor"
+    """short constructor"""
     return StringImage(string)
 
 
 
 @testcase
 def test_scan_dot_in_line(self):
-    "Okay! a single line. Find the ink."
+    """Okay! a single line. Find the ink."""
 
     img = grid(#01234567890123456
                '..#....##.....###')

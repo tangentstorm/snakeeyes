@@ -18,7 +18,7 @@ def getText(image):
         yield scrape.getstring(w, bottom-top, chatfont, hasInk, 
                                )#train=True)
 
-def scrape_loop(callback=None):
+def scrape_loop(callback=lambda image: None):
 
     prevData = None
     prevText = []
@@ -29,9 +29,7 @@ def scrape_loop(callback=None):
         data = list(im.getdata())
         if data != prevData:
             prevData = data
-
-            if callback:
-                callback(im)
+            callback(im)
             continue
 
             bw = ImageOps.autocontrast(im, 0).convert('1')

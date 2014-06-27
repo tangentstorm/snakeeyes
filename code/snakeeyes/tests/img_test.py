@@ -3,8 +3,7 @@ Tests the basic use of the system, for recognizing images.
 """
 import unittest
 import Image, ImageDraw
-from snakeeyes import fontdata, config, scrape
-from snakeeyes.Rectangle import Rectangle
+from snakeeyes import fontdata
 from snakeeyes.Region import Region
 from snakeeyes.tools import Tool
 

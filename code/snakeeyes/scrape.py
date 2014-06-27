@@ -3,7 +3,6 @@ This contains the basic algorithms for scraping text from images.
 """
 from Glyph import Glyph
 import convert
-import Image
 from fontdata import SPACE
 
 
@@ -179,7 +178,7 @@ def scan_line(img_width, img_height, pred):
             if pred(x,y):
                 column_has_ink = True # reaffirmed for every dark pixel in column
                  
-                if (state==IN_SPACE):
+                if state==IN_SPACE:
                     state = IN_GLYPH
                     since_x = x
                     glint |= convert.pixel_to_glint(0, y, img_height)

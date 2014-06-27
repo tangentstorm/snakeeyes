@@ -1,16 +1,16 @@
-'''
+"""
 Created on Aug 3, 2009
 
 @author: michal
-'''
+"""
 from Rectangle import Rectangle
 
 class Glyph(Rectangle):
 
     def __init__(self, pos, size, glint):
-        '''
+        """
         Constructor
-        '''
+        """
         super(Glyph, self).__init__(pos, size)
         self.width = size[0]
         self.glint = glint
@@ -27,7 +27,7 @@ class Glyph(Rectangle):
 
     # old (width, glint) interface:
     def as_tuple(self):
-        return (self.width, self.glint)
+        return tuple([self.width, self.glint])
 
     def __getitem__(self, idx):
         return self.as_tuple()[idx]

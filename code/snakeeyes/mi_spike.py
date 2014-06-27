@@ -16,7 +16,7 @@ def glyphs(img, font, cutoff=1, train=False):
     This is slightly more "advanced" OCR that I used 
     when trying to re-assemble joe's  book
     
-    It attempts to deal with antialiased text.
+    It attempts to deal with anti-aliased text.
     
     However, the method it uses is rather silly.
     
@@ -60,9 +60,6 @@ def glyphs(img, font, cutoff=1, train=False):
                 yield x, top, charW, scanH, ' '
                 
             x += charW
-
-
-
 
 
 #:: string -> IO ()

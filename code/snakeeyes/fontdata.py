@@ -1,5 +1,3 @@
-import os
-import shelve
 
 SPACE = object()
 
@@ -30,13 +28,13 @@ class FontData(object):
 
     #:: self -> Glyph -> String -> None
     def learn(self, glyph, grapheme):
-        "use this to store a glyph"
+        """use this to store a glyph"""
         self.data[glyph.tostring()] = grapheme
 
         
     #:: self -> Glyph -> Maybe String
     def recall(self, glyph):
-        "retrieves a character"
+        """retrieves a character"""
         if glyph is SPACE:
             return ' '
         try:

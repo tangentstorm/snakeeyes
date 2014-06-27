@@ -8,18 +8,18 @@ class Rectangle(object):
         self.size = size
     
     def far_corner(self):
-        ":: self -> (right, bottom)"
+        """:: self -> (right, bottom)"""
         _, _, right, bottom = self.as_quad()
-        return (right, bottom)
+        return tuple([right, bottom])
     
     def as_quad(self):
-        ":: self -> (left, top, right, bottom)"
+        """:: self -> (left, top, right, bottom)"""
         left, top = self.pos
         width, height = self.size
-        return (left, top, left + width, top + height)
+        return tuple([left, top, left + width, top + height])
 
     @property
     def center(self):
         x, y = self.pos
         w, h = self.size
-        return (int(x + w / 2), int(y + h / 2))
+        return tuple([int(x + w / 2), int(y + h / 2)])

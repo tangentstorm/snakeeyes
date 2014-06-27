@@ -3,7 +3,6 @@ Tests use of the system for recognizing text.
 """
 import unittest
 import Image, ImageDraw, ImageFont
-from snakeeyes import scrape
 
 class OCRTest(unittest.TestCase):
     """
@@ -23,12 +22,12 @@ class OCRTest(unittest.TestCase):
         self.font = ImageFont.load_default()
              
     def put_text(self, text, at=(25,25)):
-        "helper routine to put the text on our image"
+        """helper routine to put the text on our image"""
         self.draw.text(at, text, font=self.font, fill="black")
 
     def _show(self):
         # you might want to have bmp open in mspaint by default
-        # and have it running already, so image doensn't halt.
+        # and have it running already, so image doesn't halt.
         # before you hit the debugger
         from subprocess import Popen
         from snakeeyes import windows

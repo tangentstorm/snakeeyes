@@ -28,7 +28,7 @@ class Window(object):
         Note: this returns the CLIENT size (the drawable area)
         """
         left, top, right, bottom = self.bounds
-        return (right-left, bottom-top)
+        return tuple([right-left, bottom-top])
         
     @property
     def bounds(self):
@@ -39,7 +39,7 @@ class Window(object):
         (cl, ct, cr, cb) = GetClientRect(self.hwnd)
         (sl, st) = ClientToScreen(self.hwnd, (cl, ct))
         (sr, sb) = ClientToScreen(self.hwnd, (cr, cb))
-        return (sl, st, sr, sb)
+        return tuple([sl, st, sr, sb])
 
     @property
     def width(self):
@@ -54,7 +54,7 @@ class Window(object):
     @property
     def position(self):
         x, y, x2, y2 = GetWindowRect(self.hwnd)
-        return (x, y)
+        return tuple([x, y])
 
     def as_image(self):
         return ImageGrab.grab(self.bounds)
@@ -70,10 +70,10 @@ class Window(object):
         wx1,wy1,wx2,wy2 = GetWindowRect(self.hwnd)
         dx = (wx2 - wx1) - cx2
         dy = (wy2 - wy1) - cy2
-        MoveWindow(self.hwnd, wx1, wy1, w+dx, h+dy, True);
+        MoveWindow(self.hwnd, wx1, wy1, w+dx, h+dy, True)
 
     def grab_pixel(self, x, y):
-        " x,y -> (r,g,b) "
+        """ x,y -> (r,g,b) """
         win = win32ui.CreateWindowFromHandle(self.hwnd)
         dc = win.GetWindowDC()
         px = hex(dc.GetPixel(x, y))
@@ -85,7 +85,7 @@ class Window(object):
         g = int(px[4:6], 16)
         r = int(px[6:8], 16)
         
-        return (r,g,b)
+        return tuple([r,g,b])
 
 
 def all_hwnds(condition=lambda a:True):
@@ -100,7 +100,7 @@ def all_hwnds(condition=lambda a:True):
     return res
     
 def all():
-    "Returns a list of Window objects"
+    """Returns a list of Window objects"""
     return [Window(hwnd) for hwnd in all_hwnds()]
     
 def where(condition):

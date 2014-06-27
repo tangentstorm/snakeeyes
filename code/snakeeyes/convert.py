@@ -9,24 +9,24 @@ import wx
 import Image
 
 def img_to_wxbmp(pil):
-    ":: Image.Image -> wx.Bitmap"
+    """:: Image.Image -> wx.Bitmap"""
     return wximg_to_wxbmp(img_to_wximg(pil))
 
 def img_to_wximg(pil):
-    ":: Image.Image -> wx.Image"
+    """:: Image.Image -> wx.Image"""
     image = wx.EmptyImage(pil.size[0], pil.size[1])
     image.SetData(pil.convert('RGB').tostring())
     return image
 
 def wximg_to_wxbmp(image):
-    ":: wx.Image -> wx.Bitmap"
+    """:: wx.Image -> wx.Bitmap"""
     return image.ConvertToBitmap()
 
 
 ## these are mine:
 
 def strings_to_img(strings):
-    "[ String ] -> Image.Image"
+    """[ String ] -> Image.Image"""
     height = len(strings)
     img = Image.new('1', (len(strings[0]), height))
     for y, line in enumerate(strings):
@@ -62,27 +62,23 @@ def pixel_to_glint(x, y, img_height):
     """
     n = y + (x * img_height)
     
-    """
-    Now we just take a single bit (the number 1)
-    and stick n zeros after it. This is another 
-    way of saying "multiply by (2 ^ n)".
-    """
+    # Now we just take a single bit (the number 1)
+    # and stick n zeros after it. This is another
+    # way of saying "multiply by (2 ^ n)".
     bitmap = 1 << n  # == 2 ** n
     
-    """
-    The resulting bitmap represents a single pixel. To combine
-    two bitmaps, you can just OR them. (Which in our case, 
-    corresponds to adding them.) 
-
-    The main problem with this encoding scheme, unfortunately,
-    is that I didn't leave space in the bitmap to record the 
-    height of the original image, so you have to remember that
-    height elsewhere if you ever want to turn the bitmap back
-    into an image!
-
-    It's much easier to just store the original image as a 
-    string anyway. :)
-    """
+    # The resulting bitmap represents a single pixel. To combine
+    # two bitmaps, you can just OR them. (Which in our case,
+    # corresponds to adding them.)
+    #
+    # The main problem with this encoding scheme, unfortunately,
+    # is that I didn't leave space in the bitmap to record the
+    # height of the original image, so you have to remember that
+    # height elsewhere if you ever want to turn the bitmap back
+    # into an image!
+    #
+    # It's much easier to just store the original image as a
+    # string anyway. :)
     return bitmap
 
 

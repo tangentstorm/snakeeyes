@@ -17,7 +17,6 @@ import win32gui
 IMGROOT = "/tmp"
 WAITING, CAPTURED = 0, 1
 
-
 class CaptureFrame(wx.Frame):
     """
     Click the button to take a picture. :)
