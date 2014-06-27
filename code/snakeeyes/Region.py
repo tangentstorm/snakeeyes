@@ -1,11 +1,10 @@
-'''
+"""
 Created on Aug 2, 2009
 
 @author: michal
-'''
+"""
 from Rectangle import Rectangle
 import ImageOps
-import ImageMath
 import Image
 import ImageChops
 import ImageDraw
@@ -149,15 +148,13 @@ class ContrastRegion(Region):
         return snap
 
 
-
-
 class StretchBoxRegion(BoxRegion):
     """
     """
     def take_snapshot(self, screen):
         """
         When you use a stretch region, you should make your 
-        scraping box wide enough to accomidate the longest
+        scraping box wide enough to accommodate the longest
         expected text string. It will take a snapshot of the
         entire area, and then simply mask out the parts outside
         the left and right borders.
@@ -181,7 +178,7 @@ class StretchBoxRegion(BoxRegion):
         # start at the center and work left to find left edge,
         # looking ahead one pixel each time.
         left = center
-        while snap.getpixel((left - 1, 0)) == border_color:
+        while left > 0 and snap.getpixel((left - 1, 0)) == border_color:
             left -= 1
 
         #if left == center:
@@ -191,7 +188,7 @@ class StretchBoxRegion(BoxRegion):
 
         # and the same thing moving right:
         right = center
-        while snap.getpixel((right + 1, 0)) == border_color:
+        while right+1 < snap_w and snap.getpixel((right + 1, 0)) == border_color:
             right += 1
             
         # print "left:", left, "right:",right
