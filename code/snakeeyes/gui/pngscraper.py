@@ -1,16 +1,14 @@
 
 # based on http://wiki.wxpython.org/wxStaticBitmap example
 
-import wx, os, sys
+import wx, os
 import wx.py as py
-import Image
-sys.path.insert(0, 'w:/app/ceomatic')
-from cursor import Cursor, ListView
+from PIL import Image
+
+from snakeeyes.cursor import Cursor, ListView    # from ceomatic repo... TODO: copy here..
 from snakeeyes import scrape
 
-#PNGDIR=r'W:\app\poker\hwnd6359358' # full tilt
-PNGDIR=r'W:\app\poker\hwnd527812' # pokerstars
-PNGDIR=r"C:\tmphwnd10356946"
+PNGDIR=r"C:\tmphwnd3016056"
 
 ID_OPEN_FILE = wx.NewId()
 ID_OPEN_DIR = wx.NewId()
@@ -160,7 +158,7 @@ class PngScraperFrame(wx.Frame):
         
         # and make the pil image
         self.im = im = Image.new('RGB', (self.image.Size))
-        self.im.fromstring(wx.ImageFromBitmap(self.image.GetBitmap()).GetData())
+        self.im.frombytes(wx.ImageFromBitmap(self.image.GetBitmap()).GetData())
 
 
     def OnRightDown(self, e):
@@ -182,7 +180,7 @@ class PngScraperFrame(wx.Frame):
 
     def getGC(self):
         gc = wx.GCDC(wx.ClientDC(self.image))
-        ink = wx.Color(0x99, 0xcc, 0xff, 0x88)
+        ink = wx.Colour(0x99, 0xcc, 0xff, 0x88)
         gc.SetPen(wx.Pen(ink))
         gc.SetBrush(wx.Brush(ink))
         return gc

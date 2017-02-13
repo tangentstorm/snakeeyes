@@ -9,8 +9,8 @@ import os, sys
 
 import wx
 from wx.py.shell import Shell
-import wx.lib.mixins.listctrl  as  listmix
-import ImageOps
+import wx.lib.mixins.listctrl as listmix
+from PIL import ImageOps
 
 from snakeeyes import convert
 from snakeeyes.fontdata import NeedTraining
@@ -233,9 +233,9 @@ if __name__ == "__main__":
         import builder; reload(builder)
 
         win.bringToFront()
-        path = 'c:/ver/poker/assets/scrapecfg/pokerstars/classic/'
+        path = 'c:/temp/shots/'
         os.chdir(path)
-        builder.ConfigBuilder('holdem_792x546_headsup.scrape',
+        builder.ConfigBuilder('shots.txt',
                               win, SELECTOR).Show()
 
     app = wx.App(redirect=False)

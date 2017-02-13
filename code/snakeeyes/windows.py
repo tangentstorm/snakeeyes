@@ -4,7 +4,7 @@ Created on Jul 31, 2009
 @author: michal
 """
 import win32gui, win32ui
-import Image, ImageGrab
+from PIL import Image, ImageGrab
 from win32gui import GetWindowRect, GetClientRect, ClientToScreen, MoveWindow
 from ctypes import windll
 

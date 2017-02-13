@@ -1,8 +1,7 @@
 """
 Chat Scraper (Pokerstars only, for now)
 """
-import ImageGrab
-import ImageOps
+from PIL import ImageGrab, ImageOps
 import scrape
 import difflib
 import thread

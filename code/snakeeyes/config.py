@@ -4,7 +4,7 @@ Created on Aug 1, 2009
 @author: michal
 """
 from fontdata import FontData
-import ImageDraw
+from PIL import ImageDraw
 import shelve
 
 _KNOWN_FONTS = {}

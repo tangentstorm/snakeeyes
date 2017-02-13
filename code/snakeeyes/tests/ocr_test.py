@@ -2,7 +2,7 @@
 Tests use of the system for recognizing text.
 """
 import unittest
-import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 class OCRTest(unittest.TestCase):
     """

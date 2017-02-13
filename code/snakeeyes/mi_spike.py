@@ -8,7 +8,8 @@ The main advantage here is that it "sort of" recognizes
 anti-aliased text.
 """
 from scrape import guess_lines, scan_line
-import Image, convert
+from PIL import Image
+import convert
 
 #:: img -> font -> int -> bool -> gen [(x, y, w, h, glyph_as_int ) ]
 def glyphs(img, font, cutoff=1, train=False):

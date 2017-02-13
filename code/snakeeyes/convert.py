@@ -6,7 +6,7 @@ Some of these are based on code from:
    http://wiki.wxpython.org/index.cgi/WorkingWithImages
 """
 import wx
-import Image
+from PIL import Image
 
 def img_to_wxbmp(pil):
     """:: Image.Image -> wx.Bitmap"""

@@ -4,11 +4,8 @@ Created on Aug 2, 2009
 @author: michal
 """
 from Rectangle import Rectangle
-import ImageOps
-import Image
-import ImageChops
-import ImageDraw
-import ImageColor
+from PIL import Image, ImageOps, ImageChops, ImageDraw, ImageColor
+
 import scrape
 import sys
 import difflib
