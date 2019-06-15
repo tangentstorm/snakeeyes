@@ -8,10 +8,13 @@ to take a picture.
 @TODO: move output directory config into the GUI
 """
 
+import os
+import wx
+
 from wx.py.shell import ShellFrame
-from .WindowSelector import WindowSelector
+
 from snakeeyes import windows
-import os, wx
+from .WindowSelector import WindowSelector
 
 IMGROOT = "/tmp"
 WAITING, CAPTURED = 0, 1
@@ -31,7 +34,7 @@ class CaptureFrame(wx.Frame):
         self.txt = wx.TextCtrl(self, -1, str(hwnd))
         box.Add(self.txt, 0, wx.EXPAND)
 
-        b = wx.Button(self, wx.NewId(), "capture")
+        b = wx.Button(self, wx.NewIdRef(), "capture")
         self.Bind(wx.EVT_BUTTON, self.capture, b)
         box.Add(b, 5, wx.EXPAND)
 
@@ -48,7 +51,7 @@ class CaptureFrame(wx.Frame):
         self.lastCount = None
 
         self.state = WAITING
-        self.Bind(wx.EVT_IDLE, self.OnIdle)
+        self.Bind(wx.EVT_IDLE, self.on_idle)
 
     def image_dir(self):
         imdir = "%shwnd%s" % (IMGROOT, self.hwnd)
@@ -56,11 +59,12 @@ class CaptureFrame(wx.Frame):
             os.mkdir(imdir)
         return imdir
 
-    def is_time_to_capture(self):
+    @staticmethod
+    def is_time_to_capture():
         # @TODO: override this to schedule the captures
         return False
 
-    def OnIdle(self, e):
+    def on_idle(self, _evt):
         if not self.hwnd: return
         # and give the window a chance to redraw:
         time_to_capture = self.is_time_to_capture()
@@ -89,12 +93,12 @@ class CaptureFrame(wx.Frame):
         self.lastCount += 1
         return '%s/%05i.png' % (self.image_dir(), self.lastCount)
 
-    def capture(self, e=None):
+    def capture(self, _evt=None):
         self.im = windows.Window(self.hwnd).as_image_simple()
-        imName = self.next_name()
-        self.im.save(imName)
-        print("saved %s" % imName)
-        if e is None:
+        name = self.next_name()
+        self.im.save(name)
+        print("saved %s" % name)
+        if _evt is None:  # so we can call interactively or as an event handler
             return self.im
 
 

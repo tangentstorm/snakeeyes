@@ -10,6 +10,7 @@ from . import scrape
 import sys
 import difflib
 
+
 class Region(object):
     """
     This is the top level scraping tool.
@@ -19,6 +20,7 @@ class Region(object):
         self.tool = tool
         self.color = color
         self.last_value = None
+        self.last_snapshot = None
         
     def take_snapshot(self, screen):
         """
@@ -36,9 +38,8 @@ class Region(object):
         return self.last_value
 
 
-
 class StringRegion(Region):
-    #@TODO: replace StringTool with StringRegion?
+    # @TODO: replace StringTool with StringRegion?
     # I need this here because I want to filter the image
     # inside the debug window, and the image isn't a 
     # member of a Tool. 
@@ -47,21 +48,20 @@ class StringRegion(Region):
         thresh = Image.new("RGB", snap.size, "#999999")
         mono = ImageChops.darker(snap, thresh)
         mono = ImageOps.autocontrast(mono, 0)
-        return mono # .resize((w *2, h * 2))
-
+        return mono  # .resize((w *2, h * 2))
 
 
 class TextRegion(StringRegion):
     """
     A multi-line text region
     """
-
     def take_snapshot(self, screen):
         mono = super(TextRegion, self).take_snapshot(screen)
         self.last_snapshot = self.draw_baselines(mono)
         return self.last_snapshot
 
-    def draw_baselines(self, img_in):
+    @staticmethod
+    def draw_baselines(img_in):
         img_out = img_in.copy()
         draw = ImageDraw.Draw(img_out)
     
@@ -77,14 +77,14 @@ class TextRegion(StringRegion):
             # draw the baseline
             color = ImageColor.getrgb("#ffdddd")
             if not base:
-                base = floor -2
+                base = floor - 2
                 color = ImageColor.getrgb("red")
     
             draw.line([(0, base), (w, base)], fill=color)
             
             # shade gap between the lines
             draw.rectangle((0, prev_floor, w, ceiling), fill=gap_color)
-            prev_floor = floor +1
+            prev_floor = floor + 1
                 
         # shade final gap:
         draw.rectangle((0, prev_floor, w, h), fill=gap_color)
@@ -96,7 +96,8 @@ class TextRegion(StringRegion):
         # img_out = img_out.resize((w *2 , h* 2))
 
         return img_out
-    
+
+
 class ChatRegion(TextRegion):
     """
     This is a text region that scrolls. 
@@ -120,7 +121,6 @@ class ChatRegion(TextRegion):
         return "\n".join(text)
     
     
-
 class BoxRegion(StringRegion):
     """
     This is text with a box around it, where the box
@@ -168,7 +168,7 @@ class StretchBoxRegion(BoxRegion):
         # now, starting at the top center pixel of
         # the box, find the true x and w
         snap_w, snap_h = snap.size
-        center         = snap_w / 2
+        center = snap_w / 2
 
         border_color = snap.getpixel((center, 0))
 
@@ -178,10 +178,10 @@ class StretchBoxRegion(BoxRegion):
         while left > 0 and snap.getpixel((left - 1, 0)) == border_color:
             left -= 1
 
-        #if left == center:
-        #    print "found no pixels to the left!"
-        #    print "border color: ", border_color
-        #    print "center_x-1: ", snap.getpixel((center -1, 0))
+        # if left == center:
+        #     print "found no pixels to the left!"
+        #     print "border color: ", border_color
+        #     print "center_x-1: ", snap.getpixel((center -1, 0))
 
         # and the same thing moving right:
         right = center
@@ -191,7 +191,7 @@ class StretchBoxRegion(BoxRegion):
         # print "left:", left, "right:",right
 
         # now do the masking:
-        snap = snap.convert("RGB") # for some reason it'll draw outline but not fill in mode 1
+        snap = snap.convert("RGB")  # for some reason it'll draw outline but not fill in mode 1
         draw = ImageDraw.Draw(snap)
         draw.rectangle((0, 0, left, snap_h), fill='white')
         draw.rectangle((right, 0, snap_w, snap_h), fill='white')
@@ -201,9 +201,6 @@ class StretchBoxRegion(BoxRegion):
         draw.rectangle((0, 0, snap_w, snap_h), outline='white')
         
         # import time; time.sleep(10)
-        snap = snap.convert("1") # just to save space in the font, not that it really matters
+        snap = snap.convert("1")  # just to save space in the font, not that it really matters
         self.last_snapshot = snap
         return snap
-
-
-    

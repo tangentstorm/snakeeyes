@@ -8,22 +8,25 @@ Some of these are based on code from:
 import wx
 from PIL import Image
 
+
 def img_to_wxbmp(pil):
     """:: Image.Image -> wx.Bitmap"""
     return wximg_to_wxbmp(img_to_wximg(pil))
 
+
 def img_to_wximg(pil):
     """:: Image.Image -> wx.Image"""
-    image = wx.EmptyImage(pil.size[0], pil.size[1])
-    image.SetData(pil.convert('RGB').tostring())
+    image = wx.Image(pil.size[0], pil.size[1])
+    image.SetData(pil.convert('RGB').tobytes())
     return image
+
 
 def wximg_to_wxbmp(image):
     """:: wx.Image -> wx.Bitmap"""
     return image.ConvertToBitmap()
 
+# these are mine:
 
-## these are mine:
 
 def strings_to_img(strings):
     """[ String ] -> Image.Image"""
@@ -31,13 +34,12 @@ def strings_to_img(strings):
     img = Image.new('1', (len(strings[0]), height))
     for y, line in enumerate(strings):
         for x, char in enumerate(line):
-            img.putpixel((x, y), 1 if char=="#" else 0)
+            img.putpixel((x, y), 1 if char == "#" else 0)
     return img
 
 
-
 # type Glint = Int       -- glint means "glyph int"
-#:: Int -> Int -> Int -> Glint
+# :: Int -> Int -> Int -> Glint
 def pixel_to_glint(x, y, img_height):
     """
     Returns a big long binary number with only one bit turned on.
@@ -82,7 +84,7 @@ def pixel_to_glint(x, y, img_height):
     return bitmap
 
 
-#:: Glint -> [String]
+# :: Glint -> [String]
 def glint_to_strings(glint, height):
     """
     The only problem with this is that you have to
@@ -105,7 +107,7 @@ def glint_to_strings(glint, height):
     
     shrink = glint
     while shrink:
-        shrink, bit = (shrink /2), (shrink %2)
+        shrink, bit = (shrink / 2), (shrink % 2)
         if bit:
             lines[count % height].append("#")
         else:
@@ -113,18 +115,18 @@ def glint_to_strings(glint, height):
         count += 1
 
     # draw the baseline:
-    lines.insert(-2,'-'*len(lines[0]))
+    lines.insert(-2, '-' * len(lines[0]))
     return "\n".join(["".join(line) for line in lines])
 
 
-#:: Glint -> Int -> Image
+# :: Glint -> Int -> Image
 def glint_to_img(glint, width, height):
     img = Image.new('1', (width, height), 1)
     for x in range(width):
         for y in range(height):
             test = pixel_to_glint(x, y, height)
             if test > glint:
-                break # last column, no more bits 
+                break  # last column, no more bits
             elif test & glint:
                 img.putpixel((x, y), 0)
     return img

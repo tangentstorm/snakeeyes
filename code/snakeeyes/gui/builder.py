@@ -19,8 +19,9 @@ import snakeeyes
 import snakeeyes.Region
 import snakeeyes.gui.glyphs as glyph_gui
 import snakeeyes.gui.fonts as font_gui
-from .WindowSelector import WindowSelector
+from snakeeyes.gui.WindowSelector import WindowSelector
 from snakeeyes.tools import * # for use in the configs
+
 
 class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """
@@ -40,7 +41,8 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.DeleteAllItems()
         for name, region in sorted(self.scraper.items()):
             index = self.InsertStringItem(sys.maxsize, name)
-            self.SetStringItem(index, 1, region.last_value or '--' )
+            self.SetStringItem(index, 1, region.last_value or '--')
+
 
 class ConfigBuilder(wx.Frame):
     """
@@ -53,19 +55,17 @@ class ConfigBuilder(wx.Frame):
         """
         super(ConfigBuilder, self).__init__(parent, *a, **kw)
 
-
         self.SetTitle("profile builder: %s" % scrapefile)
 
         self.win = win
         self.scrapefile = scrapefile
 
-        self.bmp = wx.StaticBitmap(self,
-           size=(win.size if win else (792,546))) #@TODO: parameterize
+        self.bmp = wx.StaticBitmap(self, size=(win.size if win else (792, 546)))  # @TODO: parametrize
 
-        vars = { 'self': self }
+        vars = {'self': self}
         vars.update(self.__dict__)
         self.shell = Shell(self, locals = vars,
-                           introText = "SnakeEyes v0.0a\n")
+                           introText="SnakeEyes v0.0a\n")
         self.shell.AppendText("REF: ''.join(sorted(self.scraper['chat_box'].tool.font.data.values()))")
 
         self.refresh = wx.Button(self, wx.NewId(), "refresh")
@@ -74,7 +74,6 @@ class ConfigBuilder(wx.Frame):
         self.make_scraper()
         self.live_data = ScrapeDataCtrl(self.scraper, self)
         self.live_data.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item)
-
 
         if self.win is None:
             self.ticking = False
@@ -92,7 +91,6 @@ class ConfigBuilder(wx.Frame):
 
         self.layout()
         self.Show()
-
 
     def layout(self):
         """Arranges the controls inside the window."""
@@ -131,7 +129,6 @@ class ConfigBuilder(wx.Frame):
                                title="current glyph in region '%s'" % item)
         dlg.ShowModal()
 
-
     def on_refresh_button(self, e):
         self.live_coding_hook()
         #self.reload_modules()
@@ -152,25 +149,21 @@ class ConfigBuilder(wx.Frame):
     def make_scraper(self):
         self.scraper = snakeeyes.load_config(self.scrapefile)
 
-
     def collect_values(self, img):
         try:
             self.scraper.collect_values(img)
         except snakeeyes.fontdata.NeedTraining as e:
             self.request_training(e.font, e.glyph)
 
-
     def paste_snaps(self, onto):
         for region in self.scraper.values():
             onto.paste(region.last_snapshot, region.rect.pos)
-
 
     def update_image(self):
         """
         this captures the new image from the window.
         """
         self.set_image(self.win.as_image())
-
 
     def set_image(self, image):
         """
@@ -191,7 +184,6 @@ class ConfigBuilder(wx.Frame):
         self.bmp.SetBitmap(convert.img_to_wxbmp(img))
 
         self.Refresh()
-
 
     def on_tick(self, e):
         if self.ticking:
@@ -218,7 +210,6 @@ class ConfigBuilder(wx.Frame):
         self.ticking = True
 
 
-
 if __name__ == "__main__":
 
     SELECTOR = None
@@ -231,14 +222,15 @@ if __name__ == "__main__":
         """
         print("making new window for", win.text)
 
-        # this next line is for
-        from . import builder; reload(builder)
+        # this next line is just so I don't have to restart the entire
+        # app every time I make a change to the source code.
+        # instead, just re-open the window
+        from snakeeyes.gui import builder; reload(builder)
 
-        win.bringToFront()
-        path = 'c:/temp/shots/'
+        win.bring_to_front()
+        path = '.'  # c:/temp/shots/'
         os.chdir(path)
-        builder.ConfigBuilder('shots.txt',
-                              win, SELECTOR).Show()
+        builder.ConfigBuilder('shots.txt', win, SELECTOR).Show()
 
     app = wx.App(redirect=False)
 

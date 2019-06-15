@@ -1,8 +1,8 @@
 """
-Created on Aug 1, 2009
-
-@author: michal
+This pulls in scraper configuration from a python file.
 """
+import os
+
 from .fontdata import FontData
 from PIL import ImageDraw
 import shelve
@@ -18,14 +18,18 @@ _KNOWN_FONTS = {}
 from .Region import *
 from .tools import Tool, NullTool, StringTool, ContrastStringTool, TextTool
 
+
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))
 
-def get_font_tool(path):    
+
+def get_font_tool(path):
     return Tool(get_font(path))
 
-def get_string_tool(path, darker_than=10):    
+
+def get_string_tool(path, darker_than=10):
     return StringTool(get_font(path), darker_than)
+
 
 def train(tool):
     tool.font.training_mode = True
@@ -45,10 +49,10 @@ class ScrapeConfig(dict):
         :: Maybe path:Str -> ScrapeConfig
         """
         super(ScrapeConfig, self).__init__()
+        self.config = {}
         if path:
             self.read_from(path)
 
-            
     def read_from(self, path):
         """
         path points to a file containing a single python expression
@@ -57,9 +61,10 @@ class ScrapeConfig(dict):
                { name : ( (x,y), (w, h), tool, color }
 
         """
-        self.config = eval(open(path).read())
-        for name, region in self.config.items():
-            self[name] = region
+        if os.path.exists(path):
+            self.config = eval(open(path).read())
+            for name, region in self.config.items():
+                self[name] = region
             
     def draw_boxes(self, img):
         """
@@ -70,7 +75,6 @@ class ScrapeConfig(dict):
         for name, region in self.items():
             r = region.rect
             draw.rectangle([r.pos, r.far_corner()], outline=region.color)        
-
 
     def collect_values(self, img):
         """:: Image.Image -> { str : str }"""

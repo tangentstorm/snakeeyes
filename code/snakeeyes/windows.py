@@ -8,6 +8,7 @@ from PIL import Image, ImageGrab
 from win32gui import GetWindowRect, GetClientRect, ClientToScreen, MoveWindow
 from ctypes import windll
 
+
 class Window(object):
     """
     A wrapper around the win32 hwnd API
@@ -65,7 +66,7 @@ class Window(object):
         """
         return ImageGrab.grab(self.bounds)
 
-    def _makeDC(self):
+    def _make_dc(self):
         """Creates a Win32 drawing context"""
         # this would be a property except we have to manually manage
         # the garbage collection on this thing.
@@ -86,36 +87,36 @@ class Window(object):
         """
         # technique taken from:
         # http://stackoverflow.com/questions/19695214
-        selfDC = self._makeDC()
-        saveDC = selfDC.CreateCompatibleDC()
-        saveBmp = win32ui.CreateBitmap()
-        saveBmp.CreateCompatibleBitmap(selfDC, self.width, self.height)
-        saveDC.SelectObject(saveBmp)
+        self_dc = self._make_dc()
+        save_dc = self_dc.CreateCompatibleDC()
+        save_bmp = win32ui.CreateBitmap()
+        save_bmp.CreateCompatibleBitmap(self_dc, self.width, self.height)
+        save_dc.SelectObject(save_bmp)
 
         # 0=whole window, 1=client area
-        windll.user32.PrintWindow(self.hwnd, saveDC.GetSafeHdc(), 1)
+        windll.user32.PrintWindow(self.hwnd, save_dc.GetSafeHdc(), 1)
 
-        bmpInfo = saveBmp.GetInfo()
-        bmpBits = saveBmp.GetBitmapBits(True)
+        bmp_info = save_bmp.GetInfo()
+        bmp_bits = save_bmp.GetBitmapBits(True)
         img = Image.frombuffer('RGB',
-            (bmpInfo['bmWidth'], bmpInfo['bmHeight']),
-            bmpBits, 'raw', 'BGRX', 0, 1)
+                               (bmp_info['bmWidth'], bmp_info['bmHeight']),
+                               bmp_bits, 'raw', 'BGRX', 0, 1)
 
-        win32gui.DeleteObject(saveBmp.GetHandle())
-        saveDC.DeleteDC()
-        selfDC.DeleteDC()
+        win32gui.DeleteObject(save_bmp.GetHandle())
+        save_dc.DeleteDC()
+        self_dc.DeleteDC()
         win32gui.ReleaseDC(self.hwnd, self.hwndDC)
         return img
 
-    def bringToFront(self):
+    def bring_to_front(self):
         win32gui.SetForegroundWindow(self.hwnd)
         
     def move_to(self, x, y):
         MoveWindow(self.hwnd, x, y, self.width, self.height, True)
 
-    def resizeClient(self, w, h):
-        cx1,cy1,cx2,cy2 = GetClientRect(self.hwnd)
-        wx1,wy1,wx2,wy2 = GetWindowRect(self.hwnd)
+    def resize_client(self, w, h):
+        cx1, cy1, cx2, cy2 = GetClientRect(self.hwnd)
+        wx1, wy1, wx2, wy2 = GetWindowRect(self.hwnd)
         dx = (wx2 - wx1) - cx2
         dy = (wy2 - wy1) - cy2
         MoveWindow(self.hwnd, wx1, wy1, w+dx, h+dy, True)
@@ -133,33 +134,36 @@ class Window(object):
         g = int(px[4:6], 16)
         r = int(px[6:8], 16)
         
-        return tuple([r,g,b])
+        return tuple([r, g, b])
 
 
-def all_hwnds(condition=lambda a:True):
+def all_hwnds(condition=lambda a: True):
     """
     returns a list containing hwnds for all open windows
     """
     res = []
-    def keep(hwnd, extra):
+
+    def keep(hwnd, _extra):
         if condition(hwnd):
             res.append(hwnd) 
+
     win32gui.EnumWindows(keep, None)
     return res
     
-def all():
+
+def all_windows():
     """Returns a list of Window objects"""
     return [Window(hwnd) for hwnd in all_hwnds()]
     
+
 def where(condition):
     cond = condition if condition else lambda a: True
-    return [win for win in all() if cond(win)]
+    return [win for win in all_windows() if cond(win)]
 
 
 def named(txt):
     return where(lambda win: win.text.count(txt))
 
 
-def grab_pixel(hwnd, xy:(int, int)):
+def grab_pixel(hwnd, xy: (int, int)):
     return Window(hwnd).grab_pixel(*xy)
-

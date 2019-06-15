@@ -1,3 +1,7 @@
+"""
+These classes represent a cursor that can navigate back and forth in a list.
+It's used in snakeeyes.gui.pngscraper for navigating between images in a list.
+"""
 
 class Cursor(object):
 
@@ -56,58 +60,12 @@ class ListView(object):
 
     ## cursor interface
 
-
     def indexNext(self, index):
         for next in range( index +1, len(self.data)):
             if self.isVisible(next): return next
         return index
 
     def indexPrevious(self, index):
-        for next in range( index -1, -1, -1):
+        for next in range(index - 1, -1, -1):
             if self.isVisible(next): return next
         return index
-
-
-
-class ZoomView(ListView):
-    """
-    This allows you to move through a subselection of items.
-    It's modelled after the 'Zoom' feature in the Pine mail client.
-    """
-
-    def __init__(self, data):
-        ListView.__init__(self, data)
-        self.zoomed = False
-
-    ## selection interface
-
-    def selectWhere(self, test):
-        self.selected = {}
-        for i, row in enumerate(self.data):
-            self.selected[i] = bool(test(row))
-
-    ## zooming interface
-
-    def zoom(self):
-        self.zoomed = True
-
-    def unzoom(self):
-        self.zoomed = False
-
-    def visible(self):
-        if self.zoomed:
-            [(yield each) for i ,each in enumerate(self.data)
-             if self.selected[i]]
-        else:
-            [(yield each) for each in self.data]
-
-    def isVisible(self, index):
-        assert 0 <= index < len(self.data), "invalid index: %s" % index
-        if self.zoomed:
-            return self.selected[index]
-        else:
-            return True
-
-
-def ListCursor(data):
-    return Cursor(ListView(data))

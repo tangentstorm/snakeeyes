@@ -6,6 +6,7 @@ Created on Jul 31, 2009
 import wx
 from snakeeyes import windows
 
+
 class WindowSelector(wx.Frame):
     """
     Allows you to select an open window for whatever
@@ -22,7 +23,7 @@ class WindowSelector(wx.Frame):
         @return:
         """
         super(WindowSelector, self).__init__(None, -1, "select window")
-        self.filterText = wx.TextCtrl(self, -1, "Logged in as")
+        self.filterText = wx.TextCtrl(self, -1, "")
         self.Bind(wx.EVT_TEXT, self.on_text_change, self.filterText)
 
         self.tree = wx.TreeCtrl(self, size=(200,300),
@@ -55,11 +56,11 @@ class WindowSelector(wx.Frame):
                 return False # @TODO: handle unicode errors
         for win in windows.where(cond):
             item = tree.AppendItem(root, win.text)
-            tree.SetPyData(item, win)
+            tree.SetItemData(item, win)
             
     def on_text_change(self, e):
-        "rebuild tree as you type"
+        """rebuild tree as you type"""
         self.rebuild_tree()
                 
     def on_activate(self, e):
-        self.callback(self.tree.GetPyData(e.GetItem()))
+        self.callback(self.tree.GetItemData(e.GetItem()))

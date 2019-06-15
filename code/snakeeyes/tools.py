@@ -3,7 +3,10 @@ Created on Aug 2, 2009
 
 @author: michal
 """
+from PIL.Image import Image
+from typing import Callable
 from . import scrape
+
 
 class Tool(object):
     """
@@ -22,9 +25,9 @@ class NullTool(object):
     """
     A dummy tool that does nothing.
     """
-    def recognize(self, img):
+    @staticmethod
+    def recognize(_img):
         return None    
-    
 
    
 class StringTool(Tool):
@@ -37,8 +40,7 @@ class StringTool(Tool):
         super(StringTool, self).__init__(font)
         self.thresh = darker_than
 
-    #:: Image.Image -> (int -> int -> bool)
-    def predicate(self, img):
+    def predicate(self, img: Image) -> Callable[[int, int], bool]:
         if img.mode == "1":
             def pixel_check(a, b):
                 return img.getpixel((a, b)) == 0 
@@ -61,23 +63,21 @@ class ContrastStringTool(StringTool):
     @TODO: assumes origin is part of background. parametrize!
     """
 
-    def find_dark_ink(self, img, thresh=150):
-        def pred(a,b):
+    @staticmethod
+    def find_dark_ink(img, thresh=150):
+        def pred(a, b):
             return max(img.getpixel((a, b))) < thresh
         return pred
 
-    def find_light_ink(self, img, thresh=150):
-        def pred(a,b):
+    @staticmethod
+    def find_light_ink(img, thresh=150):
+        def pred(a, b):
             return max(img.getpixel((a, b))) > thresh
         return pred
     
     def predicate(self, img):
-        
-        if max(img.getpixel( (0, 0) )) < 150:
-            return self.find_light_ink(img)
-        else:
-            return self.find_dark_ink(img)  
-
+        bg_dark = max(img.getpixel((0, 0))) < 150  # max of r, g, b
+        return self.find_light_ink(img) if bg_dark else self.find_dark_ink(img)
 
 
 class TextTool(StringTool):
@@ -86,24 +86,10 @@ class TextTool(StringTool):
     """
     # @TODO: un-hard-code font metrics and line count!
     def recognize(self, img):
-        lines = scrape.calc_lines(scrape.font_metrics(), 
-                                  num_lines = 6)
+        lines = scrape.calc_lines(scrape.font_metrics(), num_lines=6)
         res = []
         for (ceil, base, floor) in lines:
             line_img = img.crop((0, ceil, img.size[0], floor + 1))
             res.append(scrape.str_from_img(line_img, self.font, 
                                            self.predicate(line_img)))
         return "\n".join(res)
-
-
-
-
-
-
-
-
-
-
-
-
-

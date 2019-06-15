@@ -11,6 +11,7 @@ from .scrape import guess_lines, scan_line
 from . import convert
 from PIL import Image
 
+
 #:: img -> font -> int -> bool -> gen [(x, y, w, h, glyph_as_int ) ]
 def glyphs(img, font, cutoff=1, train=False):
     """
@@ -32,7 +33,7 @@ def glyphs(img, font, cutoff=1, train=False):
         fakeTop = top #baseLine - 14
         fakeBot = bottom # baseLine + 3
 
-        def hasInk(a,b):
+        def hasInk(a, b):
             return img.getpixel((a,b+fakeTop)) <= cutoff # re-alias for clarity
 
         w,h = img.size
