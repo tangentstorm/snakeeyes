@@ -1,175 +1,173 @@
-
+"""
+GUI App to navigate through a list (directory) of screenshots for debugging the scraping tool.
+"""
 # based on http://wiki.wxpython.org/wxStaticBitmap example
-
-import wx, os
+import os
+import wx
 import wx.py as py
 from PIL import Image
 
-from snakeeyes.cursor import Cursor, ListView    # from ceomatic repo... TODO: copy here..
+from snakeeyes.cursor import Cursor, ListView
 from snakeeyes import scrape
 
-PNGDIR=r"C:\tmphwnd3016056"
+ID_OPEN_FILE = wx.NewIdRef()
+ID_OPEN_DIR = wx.NewIdRef()
 
-ID_OPEN_FILE = wx.NewId()
-ID_OPEN_DIR = wx.NewId()
+
+def png_list(path):
+    pngs = [f for f in os.listdir(path) if f[-4:] == ".png"]
+    return [os.path.join(path, f) for f in pngs]
+
 
 class PngScraperFrame(wx.Frame):
+    """
+    Frame for browsing through a list/directory of images, running a script on each.
+    """
+
     def __init__(self, *args, **kwargs):
+
+        self.im = None
 
         wx.Frame.__init__(self, *args, **kwargs)
 
+        self.build_menu_bar()
+        self.pngs = []
 
-        self.createMenu()
-
-        #self.pngs = ['c:/temp/mibook.png']
-        self.pngs = GetPngList(PNGDIR)
-        
         self.cursor = Cursor(ListView(self.pngs))
 
         box = wx.BoxSizer(wx.VERTICAL)
-
-        # next button
-
         row = wx.BoxSizer(wx.HORIZONTAL)
 
-
-        def CursorButton(label):
-            b = wx.Button(self, label= label)
-            b.Bind(wx.EVT_BUTTON, self.OnCursorButton)
+        def cursor_button(label):
+            b = wx.Button(self, label=label)
+            b.Bind(wx.EVT_BUTTON, self.on_cursor_button)
             return b
-            
-        row.Add(CursorButton("<<"))
-        row.Add(CursorButton("<"))
 
-        self.which =  wx.TextCtrl(self, -1, '')
-        self.updateWhich()
+        row.Add(cursor_button("<<"))
+        row.Add(cursor_button("<"))
+
+        self.which = wx.TextCtrl(self, -1, '')
+        self.update_which()
         row.Add(self.which)
 
-        row.Add(CursorButton(">"))
-        row.Add(CursorButton(">>"))
+        row.Add(cursor_button(">"))
+        row.Add(cursor_button(">>"))
 
         # coords box
         self.coords = wx.TextCtrl(self, -1, '(0,0)')
         row.Add(self.coords, 0, wx.ALIGN_RIGHT)
-        row.Add((20,20),1)
+        row.Add((20, 20), 1)
 
         # color box
         self.color = wx.TextCtrl(self, -1, '0x000000')
         row.Add(self.color, 0, wx.ALIGN_RIGHT)
-        row.Add((20,20),1)
-        
+        row.Add((20, 20), 1)
+
         box.Add(row, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
         # the image
+        pane = wx.ScrolledWindow(self, -1, size=(300, 400))
+        box.Add(pane, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL | wx.ADJUST_MINSIZE)
 
-        pane = wx.ScrolledWindow(self, -1, size=(300,400))
-        box.Add(pane, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ADJUST_MINSIZE)
-        
-        self.image = wx.StaticBitmap(pane, bitmap=wx.EmptyBitmap(800, 600))
-        self.image.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.image.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-        self.updateImage()
+        self.image = wx.StaticBitmap(pane, bitmap=wx.Bitmap(800, 600))
+        self.image.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+        self.image.Bind(wx.EVT_RIGHT_DOWN, self.on_right_down)
+        self.update_image()
 
         # the shell
-        self.locals = {'self':self, 'wx':wx, 'hook': lambda:None, 'gc':self.getGC() }
+        self.locals = {'self': self, 'wx': wx, 'hook': lambda: None, 'gc': self.get_dc()}
         self.shell = py.shell.Shell(self, locals=self.locals)
-        self.shell.SetMinSize((500,400))
+        self.shell.SetMinSize((500, 400))
         box.Add(self.shell, 4, wx.EXPAND)
         self.shell.SetFocus()
-        
+
         self.SetSizerAndFit(box)
-        wx.EVT_CLOSE(self, self.OnCloseWindow)
+        self.Bind(wx.EVT_CLOSE, self.on_close_window)
 
+    def build_menu_bar(self):
 
-    def createMenu(self):   
-        
-        # Setting up the menu.
-        filemenu= wx.Menu()
-        filemenu.Append(ID_OPEN_FILE, "&Open File", "OpenFile")
-        filemenu.Append(ID_OPEN_DIR, "Open &Directory", "OpenDir")
-        
-        filemenu.AppendSeparator()
-        filemenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
+        file_menu = wx.Menu()
+        m_open_f = file_menu.Append(ID_OPEN_FILE, "&Open File", "OpenFile")
+        m_open_d = file_menu.Append(ID_OPEN_DIR, "Open &Directory", "OpenDir")
+
+        file_menu.AppendSeparator()
+        m_exit = file_menu.Append(wx.ID_EXIT, "E&xit", " Terminate the program")
 
         # Creating the menubar.
-        menuBar = wx.MenuBar()      
-        menuBar.Append(filemenu,"&File") # Adding the "filemenu" to the MenuBar
-        self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
+        bar = wx.MenuBar()
+        bar.Append(file_menu, "&File")  # Adding the "filemenu" to the MenuBar
+        self.SetMenuBar(bar)           # Adding the MenuBar to the Frame content.
 
-        wx.EVT_MENU(self, wx.ID_EXIT, self.OnExit)
-        wx.EVT_MENU(self, ID_OPEN_FILE, self.OnOpenFile)
-        wx.EVT_MENU(self, ID_OPEN_DIR, self.OnOpenDir)
+        self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
+        self.Bind(wx.EVT_MENU, self.on_open_file, m_open_f)
+        self.Bind(wx.EVT_MENU, self.on_open_dir, m_open_d)
 
-
-    def OnCursorButton(self, evt):
-        buttonMap = {
-            "<<":"moveToStart",
-            "<" :"movePrevious",
-            ">" :"moveNext",
-            ">>":"moveToEnd",
-        }
+    def on_cursor_button(self, evt):
+        button_map = {
+            "<<": "moveToStart",
+            "<": "movePrevious",
+            ">": "moveNext",
+            ">>": "moveToEnd"}
         try:
-            getattr(self.cursor, buttonMap[evt.GetEventObject().Label])()
-            self.updateWhich()
-            self.updateImage()
+            getattr(self.cursor, button_map[evt.GetEventObject().Label])()
+            self.update_which()
+            self.update_image()
             self.shell.run('hook()')
         except StopIteration:
             pass
 
-
-
-    def OnOpenFile(self, event):
+    def on_open_file(self, _evt):
         dlg = wx.FileDialog(
-            self, message="Choose a file", defaultDir=os.getcwd(), 
+            self, message="Choose a file", defaultDir=os.getcwd(),
             defaultFile="", wildcard='*.png',
-            style=wx.OPEN | wx.CHANGE_DIR)
+            style=wx.FD_OPEN | wx.FD_CHANGE_DIR)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            self.pngs.insert(self.cursor.position,path)
-            self.updateWhich()
-            self.updateImage()
+            self.pngs.insert(self.cursor.position, path)
+            self.update_which()
+            self.update_image()
 
-    def OnOpenDir(self, event):
+    def on_open_dir(self, _evt):
         dlg = wx.DirDialog(self, "Choose a directory:",
-                           defaultPath=os.getcwd(), 
-                           style=wx.DD_DEFAULT_STYLE|wx.DD_NEW_DIR_BUTTON)
+                           defaultPath=os.getcwd(),
+                           style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             while self.pngs:
                 self.pngs.pop()
-            self.pngs.extend(GetPngList(path))
+            self.pngs.extend(png_list(path))
             self.cursor.moveToStart()
-            self.updateWhich()
-            self.updateImage()
+            self.update_which()
+            self.update_image()
             self.shell.run('hook()')
-            
-    def OnExit(self, evt):
+
+    def on_exit(self, _evt):
         self.Close()
 
-    def updateWhich(self):
+    def update_which(self):
         self.which.Value = "%s/%s" % (self.cursor.position, len(self.pngs))
 
-    def updateImage(self):
+    def update_image(self):
 
-        # set the visible bitmap
-        img = wx.Image(self.pngs[self.cursor.position], wx.BITMAP_TYPE_PNG)
-        self.image.SetBitmap(wx.BitmapFromImage(img))
-        self.Fit()
-        
-        # and make the pil image
-        self.im = im = Image.new('RGB', (self.image.Size))
-        self.im.frombytes(wx.ImageFromBitmap(self.image.GetBitmap()).GetData())
+        if len(self.pngs):
+            # set the visible bitmap
+            img = wx.Image(self.pngs[self.cursor.position], wx.BITMAP_TYPE_PNG)
+            self.image.SetBitmap(wx.Bitmap(img))
+            self.Fit()
 
+            # and make the pil image
+            self.im = Image.new('RGB', tuple(self.image.Size))
+            self.im.frombytes(bytes(self.image.GetBitmap().ConvertToImage().GetData()))
 
-    def OnRightDown(self, e):
+    def on_right_down(self, _e):
         self.image.Refresh()
-        
-    def OnLeftDown(self, e):
+
+    def on_left_down(self, e):
         point = (e.X, e.Y)
         self.coords.Value = "(%s,%s)" % point
         self.color.Value = "0x%s" % "".join(hex(v)[2:].upper()
                                             for v in self.im.getpixel(point))
-        
+
         # draw crosshairs:
         dc = wx.ClientDC(self.image)
         dc.SetPen(wx.Pen("RED"))
@@ -178,15 +176,18 @@ class PngScraperFrame(wx.Frame):
         dc.DrawLine(e.X+2, e.Y, e.X, e.Y)
         dc.DrawLine(e.X, e.Y+2, e.X, e.Y)
 
-    def getGC(self):
+    def get_dc(self):
+        """return the client drawing context"""
         gc = wx.GCDC(wx.ClientDC(self.image))
         ink = wx.Colour(0x99, 0xcc, 0xff, 0x88)
         gc.SetPen(wx.Pen(ink))
         gc.SetBrush(wx.Brush(ink))
         return gc
 
-# @TODO: re-enable drawWords. it was cool. :)
-#    def drawWords(self):
+    def draw_words(self):
+        # @TODO: re-enable draw_words. it was cool. :)
+        raise NotImplementedError
+
 #        chars = self.chars()
 #        inks = wx.Color(0x99, 0xcc, 0xff, 0x88) , wx.Color(0x99, 0xff, 0xcc, 0x88)
 #
@@ -197,40 +198,38 @@ class PngScraperFrame(wx.Frame):
 #            if c[4] not in ('', ' '):
 #
 #                ink = inks[i % 2]
-#                i += 1 
-#                
+#                i += 1
+#
 #                gc.SetPen(wx.Pen(ink))
 #                gc.SetBrush(wx.Brush(ink))
-#                
+#
 #                gc.DrawRectangle(*c[:4])
 
 #    def drawFirstUnkowns(self, cutoff=200, mode='L'):
 #        "I *THINK* this was to show a new char to learn in context."
-#        chars = self.chars(mode, cutoff) 
+#        chars = self.chars(mode, cutoff)
 #
 #        seen = {}
-#        
+#
 #        gc = self.getGC()
 #        ink = wx.Color(0xff, 0x00, 0x00, 0x88)
 #        gc.SetPen(wx.Pen(ink))
 #        gc.SetBrush(wx.Brush(ink))
-#                
+#
 #        i = 0
 #        for c in chars:
 #            if type(c[4]) in (int,long):
 #                if c[4] not in seen:
 #                    gc.DrawRectangle(*c[:4])
 #                    seen[c[4]]=True
-
-
+#
 #    def chars(self, mode='L', cutoff=200):
 #        return list(scrape.letters(self.im.convert(mode), cutoff))
-        
 
-    def drawBaseLines(self, baseline_color='#99CCFF', linegap_color='#eeeeee'):
+    def draw_baselines(self, baseline_color='#99CCFF', linegap_color='#eeeeee'):
         img_out = self.im
 
-        dc = self.getGC()
+        dc = self.get_dc()
 
         y = 0
         w, h = img_out.size
@@ -240,38 +239,32 @@ class PngScraperFrame(wx.Frame):
             dc.SetPen(wx.Pen(baseline_color))
 
             if not base:
-                base = bottom -2
+                base = bottom - 2
                 dc.SetPen(wx.RED_PEN)
 
-            dc.DrawLines([(0,base),(w,base)])
+            dc.DrawLines([(0, base), (w, base)])
 
             # shade out the other stuff
             dc.SetPen(wx.Pen(linegap_color))
             dc.SetBrush(wx.Brush(linegap_color))
-            dc.DrawRectangle(0,y,w,top-y)
+            dc.DrawRectangle(0, y, w, top-y)
             y = bottom
-            
+
         # shade bottom area
-        dc.DrawRectangle(0,y,w,h-y)
+        dc.DrawRectangle(0, y, w, h-y)
 
-
-    def OnCloseWindow(self, event):
+    def on_close_window(self, _evt):
         self.Destroy()
-
-
-def GetPngList(dir):
-    pngs = [f for f in os.listdir(dir) if f[-4:] == ".png"]
-    return [os.path.join(dir, f) for f in pngs]
 
 
 class App(wx.App):
     def OnInit(self):
         frame = PngScraperFrame(None, title="PNG Scraper")
-        frame.Position = (0,0)
+        frame.Position = (0, 0)
         frame.Show(True)
         return True
+
 
 if __name__ == "__main__":
     app = App(0)
     app.MainLoop()
-
