@@ -1,11 +1,12 @@
 """
 GUI App to navigate through a list (directory) of screenshots for debugging the scraping tool.
 """
-# based on http://wiki.wxpython.org/wxStaticBitmap example
 import os
 import wx
 import wx.py as py
 from PIL import Image
+from wx import xrc
+from wx.xrc import XRCID, XRCCTRL
 
 from snakeeyes.cursor import Cursor, ListView
 from snakeeyes import scrape
@@ -25,82 +26,49 @@ class PngScraperFrame(wx.Frame):
     """
 
     def __init__(self, *args, **kwargs):
-
-        self.im = None
-
         wx.Frame.__init__(self, *args, **kwargs)
 
-        self.build_menu_bar()
-        self.pngs = []
+    def init(self):
 
+        self.im = None
+        self.pngs = []
         self.cursor = Cursor(ListView(self.pngs))
 
-        box = wx.BoxSizer(wx.VERTICAL)
-        row = wx.BoxSizer(wx.HORIZONTAL)
+        self.coords = XRCCTRL(self, 'txt_coords')
+        self.color = XRCCTRL(self, 'txt_color')
 
-        def cursor_button(label):
-            b = wx.Button(self, label=label)
-            b.Bind(wx.EVT_BUTTON, self.on_cursor_button)
-            return b
-
-        row.Add(cursor_button("<<"))
-        row.Add(cursor_button("<"))
-
-        self.which = wx.TextCtrl(self, -1, '')
-        self.update_which()
-        row.Add(self.which)
-
-        row.Add(cursor_button(">"))
-        row.Add(cursor_button(">>"))
-
-        # coords box
-        self.coords = wx.TextCtrl(self, -1, '(0,0)')
-        row.Add(self.coords, 0, wx.ALIGN_RIGHT)
-        row.Add((20, 20), 1)
-
-        # color box
-        self.color = wx.TextCtrl(self, -1, '0x000000')
-        row.Add(self.color, 0, wx.ALIGN_RIGHT)
-        row.Add((20, 20), 1)
-
-        box.Add(row, 0, wx.ALIGN_CENTER_HORIZONTAL)
-
-        # the image
-        pane = wx.ScrolledWindow(self, -1, size=(300, 400))
-        box.Add(pane, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL | wx.ADJUST_MINSIZE)
-
-        self.image = wx.StaticBitmap(pane, bitmap=wx.Bitmap(800, 600))
+        self.image = XRCCTRL(self, 'bmp_image')
         self.image.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.image.Bind(wx.EVT_RIGHT_DOWN, self.on_right_down)
-        self.update_image()
+        #self.update_image()
 
-        # the shell
-        self.locals = {'self': self, 'wx': wx, 'hook': lambda: None, 'gc': self.get_dc()}
-        self.shell = py.shell.Shell(self, locals=self.locals)
-        self.shell.SetMinSize((500, 400))
-        box.Add(self.shell, 4, wx.EXPAND)
-        self.shell.SetFocus()
+        self.which = XRCCTRL(self, 'txt_which')
+        self.update_which()
 
-        self.SetSizerAndFit(box)
+        # button handlers
+        for btn in 'btn_first btn_prev btn_next btn_last'.split():
+            self.Bind(wx.EVT_BUTTON, self.on_cursor_button, id=XRCID(btn))
+
+        # menu handlers
+        self.Bind(wx.EVT_MENU, self.on_exit, id=XRCID('cmd_exit'))
+        self.Bind(wx.EVT_MENU, self.on_open_file, id=XRCID('cmd_open_file'))
+        self.Bind(wx.EVT_MENU, self.on_open_dir, id=XRCID('cmd_open_dir'))
+
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
 
-    def build_menu_bar(self):
+        # -- manually add pyshell
+        panel = XRCCTRL(self, 'shell_panel')
 
-        file_menu = wx.Menu()
-        m_open_f = file_menu.Append(ID_OPEN_FILE, "&Open File", "OpenFile")
-        m_open_d = file_menu.Append(ID_OPEN_DIR, "Open &Directory", "OpenDir")
+        self.locals = {'self': self, 'wx': wx, 'hook': lambda: None, 'gc': self.get_dc()}
+        self.shell = py.shell.Shell(panel, locals=self.locals)
 
-        file_menu.AppendSeparator()
-        m_exit = file_menu.Append(wx.ID_EXIT, "E&xit", " Terminate the program")
+        sizer = wx.BoxSizer()
+        sizer.Add(self.shell, 4, wx.EXPAND)
+        self.shell.SetFocus()
+        panel.SetSizer(sizer)
+        sizer.Fit(panel)
 
-        # Creating the menubar.
-        bar = wx.MenuBar()
-        bar.Append(file_menu, "&File")  # Adding the "filemenu" to the MenuBar
-        self.SetMenuBar(bar)           # Adding the MenuBar to the Frame content.
 
-        self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
-        self.Bind(wx.EVT_MENU, self.on_open_file, m_open_f)
-        self.Bind(wx.EVT_MENU, self.on_open_dir, m_open_d)
 
     def on_cursor_button(self, evt):
         button_map = {
@@ -153,7 +121,6 @@ class PngScraperFrame(wx.Frame):
             # set the visible bitmap
             img = wx.Image(self.pngs[self.cursor.position], wx.BITMAP_TYPE_PNG)
             self.image.SetBitmap(wx.Bitmap(img))
-            self.Fit()
 
             # and make the pil image
             self.im = Image.new('RGB', tuple(self.image.Size))
@@ -259,7 +226,10 @@ class PngScraperFrame(wx.Frame):
 
 class App(wx.App):
     def OnInit(self):
-        frame = PngScraperFrame(None, title="PNG Scraper")
+        res = xrc.XmlResource()
+        res.Load('pngscraper.xrc')
+        frame = res.LoadFrame(None, 'PngScraperFrame')
+        frame.init()
         frame.Position = (0, 0)
         frame.Show(True)
         return True

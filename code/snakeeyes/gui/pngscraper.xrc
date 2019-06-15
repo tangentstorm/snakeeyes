@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxFrame" name="PngScraperFrame" subclass="__main__.PngScraperFrame">
+		<style>wxDEFAULT_FRAME_STYLE|wxMAXIMIZE|wxTAB_TRAVERSAL</style>
+		<size>1036,753</size>
+		<title>PNG Scraper</title>
+		<aui_managed>0</aui_managed>
+		<object class="wxMenuBar" name="m_menubar1">
+			<label></label>
+			<object class="wxMenu" name="file_menu">
+				<label>_File</label>
+				<object class="wxMenuItem" name="cmd_open_file">
+					<label>_Open File</label>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="cmd_open_dir">
+					<label>Open _Directory</label>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="cmd_exit">
+					<label>E_xit</label>
+					<help></help>
+				</object>
+			</object>
+		</object>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btn_first">
+							<label>&lt;&lt;</label>
+							<default>0</default>
+							<markup>0</markup>
+							<bitmap />
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btn_prev">
+							<label>&lt;</label>
+							<default>0</default>
+							<markup>0</markup>
+							<bitmap />
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxTextCtrl" name="txt_which">
+							<value></value>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btn_next">
+							<label>&gt;</label>
+							<default>0</default>
+							<markup>0</markup>
+							<bitmap />
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btn_last">
+							<label>&gt;&gt;</label>
+							<default>0</default>
+							<markup>0</markup>
+							<bitmap />
+						</object>
+					</object>
+					<object class="spacer">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<size>20,20</size>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxTextCtrl" name="txt_coords">
+							<bg>#0078d7</bg>
+							<value>(0, 0)</value>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxTextCtrl" name="txt_color">
+							<value></value>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<minsize>800,600</minsize>
+					<orient>wxVERTICAL</orient>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxSplitterWindow" name="split">
+							<style>wxSP_3DSASH|wxSP_BORDER</style>
+							<sashpos>600</sashpos>
+							<gravity>0</gravity>
+							<minsize>50</minsize>
+							<orientation>horizontal</orientation>
+							<object class="wxScrolledWindow" name="box_scroll">
+								<style>wxHSCROLL|wxVSCROLL</style>
+								<scrollrate>5,5</scrollrate>
+								<object class="wxBoxSizer">
+									<orient>wxVERTICAL</orient>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALL</flag>
+										<border>5</border>
+										<object class="wxStaticBitmap" name="bmp_image">
+											<pos>0,0</pos>
+											<bitmap stock_id="wxART_MISSING_IMAGE" stock_client="">undefined.png</bitmap>
+										</object>
+									</object>
+								</object>
+							</object>
+							<object class="wxPanel" name="shell_panel">
+								<style>wxTAB_TRAVERSAL</style>
+								<bg>#28c657</bg>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>
