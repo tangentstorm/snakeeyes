@@ -3,7 +3,7 @@ Created on Aug 3, 2009
 
 @author: michal
 """
-from Rectangle import Rectangle
+from .Rectangle import Rectangle
 
 class Glyph(Rectangle):
 

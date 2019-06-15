@@ -63,4 +63,3 @@ class WindowSelector(wx.Frame):
                 
     def on_activate(self, e):
         self.callback(self.tree.GetPyData(e.GetItem()))
-    

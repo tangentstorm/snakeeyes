@@ -160,7 +160,6 @@ def named(txt):
     return where(lambda win: win.text.count(txt))
 
 
-def grab_pixel(hwnd, (x, y)):
-    return Window(hwnd).grab_pixel(x,y)
+def grab_pixel(hwnd, xy:(int, int)):
+    return Window(hwnd).grab_pixel(*xy)
 
-     

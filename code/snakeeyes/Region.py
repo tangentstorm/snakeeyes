@@ -3,10 +3,10 @@ Created on Aug 2, 2009
 
 @author: michal
 """
-from Rectangle import Rectangle
+from .Rectangle import Rectangle
 from PIL import Image, ImageOps, ImageChops, ImageDraw, ImageColor
 
-import scrape
+from . import scrape
 import sys
 import difflib
 

@@ -1,9 +1,9 @@
 """
 This contains the basic algorithms for scraping text from images.
 """
-from Glyph import Glyph
-import convert
-from fontdata import SPACE
+from . import convert
+from .Glyph import Glyph
+from .fontdata import SPACE
 
 
 def count_black_pixels_on_row(img, y):

@@ -6,6 +6,7 @@ App to help you build scraping profiles interactively.
 @author: michal
 """
 import os, sys
+from importlib import reload
 
 import wx
 from wx.py.shell import Shell
@@ -15,9 +16,10 @@ from PIL import ImageOps
 from snakeeyes import convert
 from snakeeyes.fontdata import NeedTraining
 import snakeeyes
+import snakeeyes.Region
 import snakeeyes.gui.glyphs as glyph_gui
 import snakeeyes.gui.fonts as font_gui
-from WindowSelector import WindowSelector
+from .WindowSelector import WindowSelector
 from snakeeyes.tools import * # for use in the configs
 
 class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -37,7 +39,7 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def repopulate(self):
         self.DeleteAllItems()
         for name, region in sorted(self.scraper.items()):
-            index = self.InsertStringItem(sys.maxint, name)
+            index = self.InsertStringItem(sys.maxsize, name)
             self.SetStringItem(index, 1, region.last_value or '--' )
 
 class ConfigBuilder(wx.Frame):
@@ -154,8 +156,8 @@ class ConfigBuilder(wx.Frame):
     def collect_values(self, img):
         try:
             self.scraper.collect_values(img)
-        except snakeeyes.fontdata.NeedTraining, e:
-            self.request_training(e.font, e.glyph, e.font)
+        except snakeeyes.fontdata.NeedTraining as e:
+            self.request_training(e.font, e.glyph)
 
 
     def paste_snaps(self, onto):
@@ -179,7 +181,7 @@ class ConfigBuilder(wx.Frame):
 
         try:
             self.values = self.scraper.collect_values(self.screen)
-        except NeedTraining, e:
+        except NeedTraining as e:
             self.request_training(e.font, e.glyph)
         else:
             self.paste_snaps(onto=img)
@@ -211,7 +213,7 @@ class ConfigBuilder(wx.Frame):
     def training_done(self, dlg, which_button):
         if which_button == wx.ID_OK:
             self.dlg = dlg # only for the shell
-            print "OK! learning new value!", dlg.txt.GetValue()
+            print("OK! learning new value!", dlg.txt.GetValue())
             dlg.font.learn(dlg.glyph, dlg.txt.GetValue())
         self.ticking = True
 
@@ -227,10 +229,10 @@ if __name__ == "__main__":
 
         @param win: snakeeyes.windows.Window
         """
-        print "making new window for", win.text
+        print("making new window for", win.text)
 
         # this next line is for
-        import builder; reload(builder)
+        from . import builder; reload(builder)
 
         win.bringToFront()
         path = 'c:/temp/shots/'

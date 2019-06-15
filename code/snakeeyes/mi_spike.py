@@ -7,20 +7,20 @@ think Joe was actually having some problem at the time.)
 The main advantage here is that it "sort of" recognizes
 anti-aliased text.
 """
-from scrape import guess_lines, scan_line
+from .scrape import guess_lines, scan_line
+from . import convert
 from PIL import Image
-import convert
 
 #:: img -> font -> int -> bool -> gen [(x, y, w, h, glyph_as_int ) ]
 def glyphs(img, font, cutoff=1, train=False):
     """
-    This is slightly more "advanced" OCR that I used 
+    This is slightly more "advanced" OCR that I used
     when trying to re-assemble joe's  book
-    
+
     It attempts to deal with anti-aliased text.
-    
+
     However, the method it uses is rather silly.
-    
+
     generates (x,y, width, height, char) tuples for each glyph in an image.
     glyphs may contain several characters because this system cannot
     compensate for ligatures/kerning. This doesn't really
@@ -48,18 +48,18 @@ def glyphs(img, font, cutoff=1, train=False):
                 if code in font:
                     char = font[code]
                 elif train:
-                    print bmp
-                    print convert.glint_to_strings(bmp, scanH)
-                    char = raw_input("what is it?")
+                    print(bmp)
+                    print(convert.glint_to_strings(bmp, scanH))
+                    char = input("what is it?")
                     font[code]=char
                 else:
                     char = code
-                
+
                 yield x, top, charW, scanH, char
 
             elif bmp == 0 and not train:
                 yield x, top, charW, scanH, ' '
-                
+
             x += charW
 
 
@@ -69,18 +69,18 @@ def recognize(filename):
     dumps the text from an image to stdout
     """
     import sys
-    
+
     lastTop = 0
-    
+
     for each in glyphs(Image.open(filename).convert('L'), 200, train=False):
 
         x, top, charW, scanH, char = each
-        
-        if lastTop and (top != lastTop):            
+
+        if lastTop and (top != lastTop):
             sys.stdout.write("\n") # line break
             if top - lastTop > 20:
                 sys.stdout.write("\n") # paragraph break
-                
+
         lastTop = top
 
         if type(char) == str:
@@ -99,11 +99,11 @@ def iconify(im):
     representations of the same characters, thanks to anti-aliasing.
     This is an attempt to reduce the complexity by converting
     each character to a 5x5 2-bit icon.
-    
-    ( Not an entirely awful idea, but only a first step. 
-      What you really want to do is map this to a vector 
+
+    ( Not an entirely awful idea, but only a first step.
+      What you really want to do is map this to a vector
       search engine. )
-      
+
     """
     def cutoff(pixel):
         return 255 if pixel > 240 else 0

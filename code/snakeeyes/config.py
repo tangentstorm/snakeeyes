@@ -3,7 +3,7 @@ Created on Aug 1, 2009
 
 @author: michal
 """
-from fontdata import FontData
+from .fontdata import FontData
 from PIL import ImageDraw
 import shelve
 
@@ -15,8 +15,8 @@ _KNOWN_FONTS = {}
 
 # some of these are not used in this file, but they
 # should be in scope for use by the config files themselves:
-from Region import *
-from tools import Tool, NullTool, StringTool, ContrastStringTool, TextTool
+from .Region import *
+from .tools import Tool, NullTool, StringTool, ContrastStringTool, TextTool
 
 def get_font(path):
     return _KNOWN_FONTS.setdefault(path, FontData(shelve.open(path)))

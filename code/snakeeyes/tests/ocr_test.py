@@ -4,24 +4,22 @@ Tests use of the system for recognizing text.
 import unittest
 from PIL import Image, ImageDraw, ImageFont
 
+
 class OCRTest(unittest.TestCase):
     """
-    Optical Character Recognition. 
+    Optical Character Recognition.
     """
 
     def setUp(self):
         """
-        For this test suite, we will limit ourselves to crisp 
+        For this test suite, we will limit ourselves to crisp
         black pixels (no anti-aliasing) on a white background.
-        
-        For converting images "in the wild" to this 
-        format, see ink_test.py.
         """
         self.img = Image.new("1", (300, 200), "white")
         self.draw = ImageDraw.Draw(self.img)
         self.font = ImageFont.load_default()
-             
-    def put_text(self, text, at=(25,25)):
+
+    def put_text(self, text, at=(25, 25)):
         """helper routine to put the text on our image"""
         self.draw.text(at, text, font=self.font, fill="black")
 
@@ -39,11 +37,11 @@ class OCRTest(unittest.TestCase):
         windows.named(f).close()
 
     ##############################################################
-                
+
     def test_glyph(self):
         """
         Our first task is to be able to detect a single glyph.
-    
+
         (A glyph is just a symbol representing one or more
         characters. See http://en.wikipedia.org/wiki/Glyph )
         """
@@ -53,9 +51,8 @@ class OCRTest(unittest.TestCase):
 
         #found = list(scrape.str_from_img(self.img))
         #assert len(found) == 1, found
-                
-        #self._show()        
 
+        #self._show()
 
 
 if __name__ == "__main__":

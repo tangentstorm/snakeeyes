@@ -3,7 +3,7 @@ Created on Aug 2, 2009
 
 @author: michal
 """
-import scrape
+from . import scrape
 
 class Tool(object):
     """
