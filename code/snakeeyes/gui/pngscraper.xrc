@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxFrame" name="PngScraperFrame" subclass="__main__.PngScraperFrame">
-		<style>wxDEFAULT_FRAME_STYLE|wxMAXIMIZE|wxTAB_TRAVERSAL</style>
+		<style>wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL</style>
 		<size>1036,753</size>
 		<title>PNG Scraper</title>
 		<aui_managed>0</aui_managed>
@@ -122,7 +122,7 @@
 						<border>5</border>
 						<object class="wxSplitterWindow" name="split">
 							<style>wxSP_3DSASH|wxSP_BORDER</style>
-							<sashpos>600</sashpos>
+							<sashpos>400</sashpos>
 							<gravity>0</gravity>
 							<minsize>50</minsize>
 							<orientation>horizontal</orientation>

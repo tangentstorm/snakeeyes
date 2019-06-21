@@ -37,6 +37,8 @@ class PngScraperFrame(wx.Frame):
         self.coords = XRCCTRL(self, 'txt_coords')
         self.color = XRCCTRL(self, 'txt_color')
 
+        self.scroll = XRCCTRL(self, 'box_scroll')
+
         self.image = XRCCTRL(self, 'bmp_image')
         self.image.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.image.Bind(wx.EVT_RIGHT_DOWN, self.on_right_down)
@@ -121,6 +123,8 @@ class PngScraperFrame(wx.Frame):
             # set the visible bitmap
             img = wx.Image(self.pngs[self.cursor.position], wx.BITMAP_TYPE_PNG)
             self.image.SetBitmap(wx.Bitmap(img))
+
+            self.scroll.SetVirtualSize(self.image.Size)
 
             # and make the pil image
             self.im = Image.new('RGB', tuple(self.image.Size))
