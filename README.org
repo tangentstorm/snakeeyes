@@ -27,4 +27,4 @@
 
 ** vocabulary:
 - glint :: glyph integer. basically a bitmap packed into an int
-- glyph :: an image to recognize (usually  single character)
+- glyph :: an image to recognize (usually single character)
