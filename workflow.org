@@ -1,0 +1,190 @@
+#+title: workflow in snakeeyes
+
+So there's an application that throws dynamic information up on the screen,
+in the form of texts and images, and you want to collect it.
+
+Snakeeyes provides a python library to help make that task easier, and a graphical user interface to help you test and inspect your configurations in real time.
+
+
+
+
+* TODO example scraper: Microsoft Solitaire Collection -- Klondike
+
+** DONE determine what to capture
+*** settle on a window size
+*** "font" (the list of images to capture)
+**** 52 playing cards
+**** card back
+**** empty table
+**** 9 digits for timer and score
+**** 1 colon character for time
+
+*** regions:
+**** 4 stacks, 1 per suit
+**** 7 columns of cards
+**** 1 deck: does it have cards or not?
+**** 3 dealt cards
+**** timer
+**** score
+
+*** tools:
+**** text tool for score and timer
+**** simple image tool for card corners
+**** stack scanner:
+- vertical stack of cards
+- number of downward facing cards
+
+*** other notes:
+- disable glowing hints
+- the lower stacks compress vertically a bit when you have all 13 cards, so let's focus on the lower part of the rank and upper part of the suit icon.
+- tooltip for full-screen view might interfere with top right stack
+
+** TODO choose and record a standard window size
+
+** DONE take some strategic screenshots
+*** run gui/capture.py
+- a window selector pops up.
+  - enter 'Solitaire' into the window
+  - double click "Microsoft Solitaire Collection"
+- a capture window pops up.
+  - get the screen the way you want it, click "capture"
+  - std output shows the path to the folder
+*** set up interesting screenshots to capture
+  - test shot (probably switch to simple mode)
+  - show as many cards as possible
+  - same cards in different positions
+  - let the time go past 1 hour
+  - capture the "stack compression" issue (cards move closer together as you get a bigger stack)
+  - try to get full king-to-ace on the right side, without flipping over any of the 6 cards
+    - did this by going to easy mode (1 card at a time)
+    - this is important: determines the vertical rectangle we should capture
+  - then get the same stack in all other positions.
+  - probably should have then taken the cards off one by one
+    - but it doesn't really matter
+    - we'll set up vertical columns and look for the gaps between blobs
+
+** TODO Now load the pictures into pngscraper to set up our config
+*** open the directory
+*** navigate to picture 42 (the one with the full set of ranks all the way on the right)
+*** TODO draw a box around the icons.
+- there aren't visual drawing tools yet
+- but click anywhere to see the coordinates in upper right box
+- then use the shell to draw a rectangle:
+#+begin_src src
+dc = self.get_dc()
+dc.DrawRectangle(955,392,14,20)  # the red k and very top of the heart
+
+dc.DrawRectangle(955,392,14,348)  # reaches all the way down to the ace's icon
+self.Refresh() # to clear
+#+end_src
+
+** TODO set up a scrape file
+- filename *.scrape
+- contains one single python expression
+  - expression evaluates to a name->Region dictionary
+  - I tend to use one big lambda expression to set up helper values
+  - I don't actually like this, but that's how it currently works.
+
+** TODO set up a region (using live scraper (builder.py) for now)
+starting example:
+#+begin_src python
+(lambda
+
+end=None:
+{
+
+    'box': Region((100, 100), (500, 300), NullTool(), 'green')
+
+})()
+
+#+end_src
+
+- run builder.py and select you're window.
+   You should now see the screenshots in grayscale, with a green box drawn at the coordinates in the config file. Note that everything inside the box is in color.
+
+- to tweak the coordinates, run =self.make_scraper()= in the python prompt inside the app.
+
+** TODO old font storage appears to be broken
+Used to store everything with shelve.
+Shelve requires string keys.
+We used to be able to get raw image data as a string.
+Now PIL / pillow force you to use .tobytes() instead.
+
+
+
+
+
+
+
+
+
+
+** TODO deliverables
+- project directory with:
+  - a couple screenshots
+  - fontd file
+  - scrape config file
+
+
+
+
+* --------------------
+
+* TODO improve the pngscraper window
+- [ ] jump directly to an image by typing in the text box
+- [ ] have a panel of thumbnails you can click on too
+- [ ] be able to draw boxes
+
+* TODO improve user experience for capture
+** TODO improve the 'select window' window
+  - [ ] make it a panel so we can embed it elsewhere
+  - [ ] hide windows without names
+** TODO improve the 'capture' window
+  - [ ] show and choose output directory
+  - [ ] show a preview of the capture
+  - [ ] click to open image/directory
+  - [ ] show a list of the images we've already captured
+  - [ ] remember settings for next time:
+    - [ ] window title search string
+    - [ ] expected window size
+    - [ ] image directory
+    - [ ] simple mode for image capture?
+  - [ ] maybe keep a manifest file with notes for each capture?
+
+
+* TODO make scrape files loadable
+shouldn't have to be in the same directory
+
+
+
+* TODO new font browser
+** TODO throw away gui/test.fontd
+It only mapped glints to letters, but you can't easily convert a glint back to an image without the width.
+All the real fonts use shelve. (Probably old shevle that needs to be updated to convert strings to bytes.)
+** old glint font browser (main in fonts.py) is busted
+
+* TODO merge builder and pngscraper
+
+
+
+* -- immediate ---
+
+* TODO clean up region area to be black and white (match 1 color)
+Nice idea would be to show a histogram of most common colors, and use a visual tool to classify these as paper / ink / ignore.
+
+
+
+
+
+* -- soon --
+* TODO move regions around with the mouse and keyboard
+Don't bother saving for now.
+
+* TODO revamp scraper config to be more like flutter
+* TODO save hand-moved regions to config file
+
+
+
+
+
+
