@@ -27,16 +27,20 @@ class PngScraperFrame(wx.Frame):
 
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, *args, **kwargs)
-
-    def init(self):
-
-        self.im = None
+        self.im: Image.Image = None
         self.pngs = []
         self.cursor = Cursor(ListView(self.pngs))
+        self.coords: wx.TextCtrl = None
+        self.color:  wx.TextCtrl = None
+        self.scroll: wx.ScrolledWindow = None
+        self.image: wx.Image = None
+        self.which: wx.TextCtrl = None
+        self.locals = {}
+        self.shell: py.shell.Shell = None
 
+    def init(self):
         self.coords = XRCCTRL(self, 'txt_coords')
         self.color = XRCCTRL(self, 'txt_color')
-
         self.scroll = XRCCTRL(self, 'box_scroll')
 
         self.image = XRCCTRL(self, 'bmp_image')
@@ -55,7 +59,6 @@ class PngScraperFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, id=XRCID('cmd_exit'))
         self.Bind(wx.EVT_MENU, self.on_open_file, id=XRCID('cmd_open_file'))
         self.Bind(wx.EVT_MENU, self.on_open_dir, id=XRCID('cmd_open_dir'))
-
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
 
         # -- manually add pyshell
@@ -69,8 +72,6 @@ class PngScraperFrame(wx.Frame):
         self.shell.SetFocus()
         panel.SetSizer(sizer)
         sizer.Fit(panel)
-
-
 
     def on_cursor_button(self, evt):
         button_map = {
