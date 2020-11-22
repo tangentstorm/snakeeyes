@@ -14,7 +14,7 @@ import wx
 from wx.py.shell import ShellFrame
 
 from snakeeyes import windows
-from .WindowSelector import WindowSelector
+from snakeeyes.gui.WindowSelector import WindowSelector
 
 IMGROOT = "/tmp"
 WAITING, CAPTURED = 0, 1
