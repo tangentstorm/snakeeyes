@@ -1,27 +1,12 @@
 """
 Tool to add and draw boxes on the screen.
 """
-from typing import Tuple, Optional
-
 import wx
 
 
-class BoxCanvas(wx.Panel):
+class BoxScene:
 
-    def __init__(self, *a, **kw):
-        super(BoxCanvas, self).__init__(*a, **kw)
-        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)  # for double buffering
-        self.Bind(wx.EVT_PAINT, self.on_paint)
-        self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
-        self.Bind(wx.EVT_MOTION, self.on_mouse_move)
-        self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
-        self.Bind(wx.EVT_KEY_UP, self.on_key_up)
-
-        self.index = -1
-        self.held = None
-        self.offset = wx.Point(0, 0)
-        self.dragged = False
-
+    def __init__(self):
         self.rects = [wx.Rect(x, y, w, h) for x, y, w, h in [
             (10, 10, 50, 30),
             (20, 20, 50, 30)]]
@@ -32,15 +17,39 @@ class BoxCanvas(wx.Panel):
                 return len(self.rects) - (i + 1)
         return -1
 
+
+class BoxCanvas(wx.Panel):
+
+    def __init__(self, *a, scene: BoxScene = None,
+                 bg: wx.Bitmap = None,
+                 bg_color: int = 0x996633,
+                 **kw):
+
+        self.scene = BoxScene() if scene is None else scene
+        self.bg = bg
+        self.bg_color = bg_color
+        self.index = -1
+        self.held = None
+        self.offset = wx.Point(0, 0)
+        self.dragged = False
+
+        super(BoxCanvas, self).__init__(*a, **kw)
+        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)  # required for double buffering
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
+        self.Bind(wx.EVT_MOTION, self.on_mouse_move)
+        self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
+        self.Bind(wx.EVT_KEY_UP, self.on_key_up)
+
     def on_mouse_down(self, e: wx.MouseEvent):
         self.dragged = False
         refresh = False
-        index = self.find_index_at_point(e.x, e.y)
+        index = self.scene.find_index_at_point(e.x, e.y)
         if index != self.index:
             self.index = index
             refresh = True
         if index >= 0:
-            self.held = self.rects[index]
+            self.held = self.scene.rects[index]
             self.offset = wx.Point(self.held.x - e.x, self.held.y - e.y)
             refresh = True
         if refresh:
@@ -50,7 +59,7 @@ class BoxCanvas(wx.Panel):
         self.held = None
         if not self.dragged:
             # click to select
-            index = self.find_index_at_point(e.x, e.y)
+            index = self.scene.find_index_at_point(e.x, e.y)
             if index != self.index:
                 self.index = index
                 self.Refresh()
@@ -63,7 +72,7 @@ class BoxCanvas(wx.Panel):
 
     def nudge(self, dx: int, dy: int):
         if self.index >= -1:
-            box = self.rects[self.index]
+            box = self.scene.rects[self.index]
             box.SetPosition(box.GetPosition() + wx.Point(dx, dy))
             self.Refresh()
 
@@ -79,18 +88,42 @@ class BoxCanvas(wx.Panel):
 
     def on_paint(self, _e: wx.MouseEvent):
         dc = wx.BufferedPaintDC(self)
-        dc.SetBackground(wx.Brush(wx.Colour(0xccaa55)))  # BGR hex code
-        dc.Clear()
-        for i, rect in enumerate(self.rects):
+        if self.bg:
+            dc.DrawBitmap(self.bg, 0, 0)
+        else:
+            dc.SetBackground(wx.Brush(wx.Colour(self.bg_color)))  # BGR hex code
+            dc.Clear()
+        for i, rect in enumerate(self.scene.rects):
             dc.SetPen(wx.BLACK_PEN)
-            dc.SetBrush(wx.YELLOW_BRUSH if i == self.index else wx.WHITE_BRUSH)
+            dc.SetBrush(wx.CYAN_BRUSH if i == self.index else wx.WHITE_BRUSH)
             dc.DrawRectangle(rect)
 
 
 class BoxFrame(wx.Frame):
     def __init__(self, *a, **kw):
         super(BoxFrame, self).__init__(*a, **kw)
-        self.canvas = BoxCanvas(self)
+
+        self.scene = BoxScene()
+
+        tb = self.make_toolbar()
+        self.canvas = BoxCanvas(self, scene=self.scene, size=(640, 480))
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(tb)
+        sizer.Add(self.canvas)
+        self.SetSizerAndFit(sizer)
+
+    def make_toolbar(self):
+        tb = wx.ToolBar(self)
+        buttons = [
+            (10, "New", wx.ART_NEW, "Long help for New")]
+
+        for ref, name, icon, help in buttons:
+            bmp = wx.ArtProvider.GetBitmap(icon, wx.ART_TOOLBAR, (24, 24))
+            tb.AddTool(ref, name, bmp, wx.NullBitmap, wx.ITEM_NORMAL, name, help)
+
+        tb.Realize()
+        return tb
 
 
 if __name__ == "__main__":
