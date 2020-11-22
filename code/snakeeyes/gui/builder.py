@@ -39,9 +39,9 @@ class ScrapeDataCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
     def repopulate(self):
         self.DeleteAllItems()
-        for name, region in sorted(self.scraper.items()):
-            index = self.InsertStringItem(sys.maxsize, name)
-            self.SetStringItem(index, 1, region.last_value or '--')
+        for i, (name, region) in enumerate(sorted(self.scraper.items())):
+            index = self.InsertItem(i, name)
+            self.SetItem(index, 1, region.last_value or '--')
 
 
 class ConfigBuilder(wx.Frame):
@@ -59,6 +59,7 @@ class ConfigBuilder(wx.Frame):
 
         self.win = win
         self.scrapefile = scrapefile
+        self.use_simple = True
 
         self.bmp = wx.StaticBitmap(self, size=(win.size if win else (792, 546)))  # @TODO: parametrize
 
@@ -131,16 +132,18 @@ class ConfigBuilder(wx.Frame):
 
     def on_refresh_button(self, e):
         self.live_coding_hook()
-        #self.reload_modules()
+        self.reload_modules()
         self.make_scraper()
         self.set_image(self.screen)
 
-    def reload_modules(self):
+    @staticmethod
+    def reload_modules():
         reload(snakeeyes.config)
         reload(snakeeyes.Region)
         reload(snakeeyes)
         reload(glyph_gui)
         reload(font_gui)
+
 
     def live_coding_hook(self):
         # this is a little livecoding thing:
@@ -163,7 +166,8 @@ class ConfigBuilder(wx.Frame):
         """
         this captures the new image from the window.
         """
-        self.set_image(self.win.as_image())
+        meth = self.win.as_image_simple if self.use_simple else self.win.as_image
+        self.set_image(meth())
 
     def set_image(self, image):
         """
@@ -230,7 +234,7 @@ if __name__ == "__main__":
         win.bring_to_front()
         path = '.'  # c:/temp/shots/'
         os.chdir(path)
-        builder.ConfigBuilder('shots.txt', win, SELECTOR).Show()
+        builder.ConfigBuilder('scrape_cfg.py', win, SELECTOR).Show()
 
     app = wx.App(redirect=False)
 
